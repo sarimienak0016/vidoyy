@@ -1,7 +1,8 @@
 {
   "functions": {
     "api/video.js": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "memory": 1024
     }
   },
   "rewrites": [
@@ -9,5 +10,9 @@
       "source": "/(.*)",
       "destination": "/api/video"
     }
-  ]
+  ],
+  "buildCommand": null,
+  "outputDirectory": "public",
+  "devCommand": null,
+  "installCommand": "npm install"
 }
