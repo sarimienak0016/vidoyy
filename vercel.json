@@ -1,15 +1,22 @@
 {
   "functions": {
-    "api/index.js": {
+    "index.js": {
       "maxDuration": 30,
       "memory": 1024
     }
   },
   "rewrites": [
-    { "source": "/(e|d|v)/:id", "destination": "/api" },
-    { "source": "/", "destination": "/api" }
+    {
+      "source": "/(e|d|v)/:id",
+      "destination": "/index.js"
+    },
+    {
+      "source": "/",
+      "destination": "/index.js"
+    }
   ],
   "buildCommand": null,
   "outputDirectory": null,
-  "devCommand": null
+  "devCommand": null,
+  "installCommand": "npm install"
 }
