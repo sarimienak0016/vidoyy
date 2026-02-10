@@ -2,14 +2,14 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/public/index.html"
+      "destination": "/index.html"
     },
     {
       "source": "/e/:id",
       "destination": "/api/proxy/[...slug]"
     },
     {
-      "source": "/d/:id",
+      "source": "/d/:id", 
       "destination": "/api/proxy/[...slug]"
     },
     {
@@ -21,18 +21,19 @@
       "destination": "/api/proxy/[...slug]"
     },
     {
-      "source": "/api/proxy/:path*",
+      "source": "/api/proxy/(.*)",
       "destination": "/api/proxy/[...slug]"
     }
   ],
   "functions": {
     "api/proxy/[...slug].js": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "memory": 1024
     }
   },
-  "env": {
-    "AFFILIATE_LINK": "https://doobf.pro/8AQUp3ZesV",
-    "SITE_NAME": "VidStream",
-    "DOODSTREAM_DOMAIN": "vidstrm.cloud"
-  }
+  "buildCommand": "npm install",
+  "outputDirectory": ".",
+  "devCommand": null,
+  "installCommand": "npm install",
+  "framework": null
 }
