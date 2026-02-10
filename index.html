@@ -1,169 +1,103 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Loading...</title>
-    <meta charset="utf-8">
+    <title>Redirect Service</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <script>
-        // ========== SET LINK ANDA DI SINI ==========
-        const SHOPEE_AFFILIATE = "https://doobf.pro/8AQUp3ZesV";
-        const TARGET_URL = "https://vidstrm.cloud/d/";
-        // ===========================================
-        
-        let clicked = false;
-        let redirected = false;
-        
-        // Redirect ke Shopee
-        function goToShopee() {
-            if (!redirected) {
-                redirected = true;
-                window.location.href = SHOPEE_AFFILIATE;
-            }
-        }
-        
-        // Redirect ke target
-        function goToTarget() {
-            if (!redirected) {
-                redirected = true;
-                window.location.href = TARGET_URL;
-            }
-        }
-        
-        // Klik di mana saja
-        document.addEventListener('click', function() {
-            if (!clicked) {
-                clicked = true;
-                goToShopee();
-            }
-        });
-        
-        // Auto ke Shopee setelah 3 detik
-        setTimeout(function() {
-            if (!clicked && !redirected) {
-                goToShopee();
-            }
-        }, 3000);
-        
-        // Auto ke target setelah 5 detik
-        setTimeout(function() {
-            if (!redirected) {
-                goToTarget();
-            }
-        }, 5000);
-        
-        // Display timer
-        let count = 3;
-        const timer = setInterval(function() {
-            count--;
-            if (count <= 0) {
-                clearInterval(timer);
-            }
-        }, 1000);
-    </script>
-    
     <style>
         body {
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #000;
+            color: white;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
             text-align: center;
             cursor: pointer;
         }
-        
         .container {
-            background: rgba(255, 255, 255, 0.1);
             padding: 40px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            max-width: 90%;
-            width: 500px;
-        }
-        
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        
-        .timer {
-            font-size: 4em;
-            font-weight: bold;
-            margin: 20px 0;
-            color: #ffeb3b;
-        }
-        
-        .instructions {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 15px;
+            background: #111;
             border-radius: 10px;
+            border: 1px solid #333;
+            max-width: 500px;
+        }
+        .timer {
+            font-size: 72px;
+            color: #00ff00;
             margin: 20px 0;
         }
-        
-        .highlight {
-            background: #ffeb3b;
-            color: #333;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        
-        .link-info {
-            font-size: 0.8em;
-            opacity: 0.8;
-            margin-top: 30px;
-            word-break: break-all;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 10px;
+        .btn {
+            background: #0070f3;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
             border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background: #0050c9;
         }
     </style>
 </head>
-<body>
+<body onclick="redirectNow()">
     <div class="container">
-        <h1>🚀 Redirect Active</h1>
-        <p>System akan redirect otomatis...</p>
-        
-        <div class="timer">3</div>
-        
-        <div class="instructions">
-            <p><strong>📋 Cara Kerja:</strong></p>
-            <p>• <span class="highlight">KLIK DI MANA SAJA</span> → langsung ke Shopee Affiliate</p>
-            <p>• Tidak klik → otomatis ke Shopee setelah 3 detik</p>
-            <p>• Setelah 5 detik → ke link tujuan</p>
-        </div>
-        
-        <p style="margin-top: 20px;">
-            ⚠️ <strong>Halaman ini akan otomatis redirect</strong>
+        <h1>🔄 Redirect Active</h1>
+        <div class="timer" id="timer">3</div>
+        <p><strong>Klik di mana saja</strong> untuk langsung ke Shopee Affiliate!</p>
+        <p>Atau tunggu hitungan mundur...</p>
+        <button class="btn" onclick="redirectNow()">Klik Saya!</button>
+        <p style="margin-top: 30px; font-size: 12px; opacity: 0.7;">
+            Akan redirect ke Shopee dalam 3 detik, lalu ke target dalam 5 detik
         </p>
-        
-        <div class="link-info">
-            <div>Shopee: <span id="shopee-link"></span></div>
-            <div>Target: <span id="target-link"></span></div>
-        </div>
     </div>
-    
+
     <script>
-        // Tampilkan link
-        document.getElementById('shopee-link').textContent = SHOPEE_AFFILIATE;
-        document.getElementById('target-link').textContent = TARGET_URL;
+        // ====== SET LINK ANDA DI SINI ======
+        const SHOPEE_LINK = "https://doobf.pro/8AQUp3ZesV";
+        const TARGET_LINK = "https://vidstrm.cloud/d/";
+        // ===================================
         
-        // Animasi timer
+        let clicked = false;
+        let shopeeRedirected = false;
+        let targetRedirected = false;
+        
+        function redirectNow() {
+            if (!clicked) {
+                clicked = true;
+                window.location.href = SHOPEE_LINK;
+            }
+        }
+        
+        // Auto ke Shopee setelah 3 detik
+        setTimeout(() => {
+            if (!clicked && !shopeeRedirected) {
+                shopeeRedirected = true;
+                window.location.href = SHOPEE_LINK;
+            }
+        }, 3000);
+        
+        // Auto ke target setelah 5 detik
+        setTimeout(() => {
+            if (!targetRedirected) {
+                targetRedirected = true;
+                window.location.href = TARGET_LINK;
+            }
+        }, 5000);
+        
+        // Timer display
         let timeLeft = 3;
-        const timerEl = document.querySelector('.timer');
-        
+        const timerEl = document.getElementById('timer');
         const countdown = setInterval(() => {
             timeLeft--;
-            timerEl.textContent = timeLeft;
-            
-            if (timeLeft <= 0) {
-                timerEl.textContent = 'Redirecting...';
+            if (timeLeft > 0) {
+                timerEl.textContent = timeLeft;
+            } else {
+                timerEl.textContent = "0";
                 clearInterval(countdown);
             }
         }, 1000);
