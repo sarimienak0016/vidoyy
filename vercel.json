@@ -1,15 +1,25 @@
 {
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 30,
-      "memory": 1024
-    }
-  },
   "rewrites": [
-    { "source": "/(e|d|v)/:id", "destination": "/api" },
-    { "source": "/", "destination": "/api" }
+    {
+      "source": "/",
+      "destination": "/api/proxy/[...slug]"
+    },
+    {
+      "source": "/e/:id",
+      "destination": "/api/proxy/[...slug]"
+    },
+    {
+      "source": "/d/:id",
+      "destination": "/api/proxy/[...slug]"
+    },
+    {
+      "source": "/v/:id",
+      "destination": "/api/proxy/[...slug]"
+    }
   ],
-  "buildCommand": null,
-  "outputDirectory": null,
-  "devCommand": null
+  "functions": {
+    "api/proxy/[...slug].js": {
+      "maxDuration": 30
+    }
+  }
 }
