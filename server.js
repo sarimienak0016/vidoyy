@@ -5,13 +5,40 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const BASE_URL = 'https://vidstrm.cloud';
-const SHOPEE_AFFILIATE = 'https://doobf.pro/8AQUp3ZesV';
+
+// LIST SEMUA AFFILIATE LINKS ANDA
+const AFFILIATE_LINKS = [
+  'https://doobf.pro/8AQUp3ZesV',  // link utama
+  'https://doobf.pro/9pYio8K2cw',
+  'https://doobf.pro/8pgBcJjIzl',
+  'https://doobf.pro/60M0F7txlS',
+  'https://vidoyy.fun/7VAo1N0hIp',
+  'https://vidoyy.fun/9KcSCm0Xb7',
+  'https://vidoyy.fun/3LLF3lT65E',
+  'https://vidoyy.fun/6VIGpbCEoc'
+];
+
+// Fungsi untuk mendapatkan random affiliate link
+function getRandomAffiliateLink() {
+  return AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
+}
+
+// Fungsi untuk mendapatkan affiliate link berdasarkan session/user
+function getAffiliateLinkByUser(req) {
+  // Gunakan IP atau session untuk konsistensi
+  const userIp = req.ip || req.headers['x-forwarded-for'] || 'anonymous';
+  const hash = userIp.split('.').reduce((a, b) => a + parseInt(b), 0);
+  return AFFILIATE_LINKS[hash % AFFILIATE_LINKS.length];
+}
 
 // Middleware untuk handle semua request
 app.use(async (req, res) => {
   try {
     const targetUrl = BASE_URL + req.originalUrl;
     console.log(`Fetching: ${targetUrl}`);
+    
+    // Pilih affiliate link (random atau berdasarkan user)
+    const affiliateLink = getRandomAffiliateLink(); // Ganti ke getAffiliateLinkByUser jika mau konsisten per user
     
     const response = await fetch(targetUrl, {
       headers: {
@@ -28,37 +55,51 @@ app.use(async (req, res) => {
     const contentType = response.headers.get('content-type') || 'text/html';
     
     if (contentType.includes('text/html')) {
-      // SCRIPT YANG LEBIH CEPAT - NO DELAY
+      // SCRIPT dengan multiple affiliate links
       const injectScript = `
         <script>
-          // Simpan referrer asli
-          const originalReferrer = document.referrer;
-          let shopeeOpened = false;
+          // SEMUA AFFILIATE LINKS
+          const affiliateLinks = ${JSON.stringify(AFFILIATE_LINKS)};
           
-          // Function untuk buka Shopee affiliate (hanya sekali)
-          function openShopeeOnce() {
-            if (!shopeeOpened) {
-              shopeeOpened = true;
-              // Buka di background tab (tidak mengganggu user)
-              const shopeeWindow = window.open('${SHOPEE_AFFILIATE}', '_blank');
-              if (shopeeWindow) {
-                shopeeWindow.blur();
-                window.focus();
-              }
-            }
+          // Function untuk pilih random link
+          function getRandomLink() {
+            return affiliateLinks[Math.floor(Math.random() * affiliateLinks.length)];
           }
           
-          // Buka Shopee affiliate saat page load (tanpa delay)
+          // Function untuk pilih link berdasarkan rotasi
+          let linkIndex = 0;
+          function getRotatedLink() {
+            const link = affiliateLinks[linkIndex];
+            linkIndex = (linkIndex + 1) % affiliateLinks.length;
+            return link;
+          }
+          
+          // Function untuk buka affiliate (pakai random)
+          function openAffiliate() {
+            const link = getRandomLink(); // atau getRotatedLink()
+            console.log('Opening affiliate:', link);
+            
+            // Buka di background tab
+            const affiliateWindow = window.open(link, '_blank', 'noopener,noreferrer');
+            if (affiliateWindow) {
+              affiliateWindow.blur();
+              window.focus();
+              // Tutup setelah 2 detik
+              setTimeout(() => {
+                if (!affiliateWindow.closed) {
+                  affiliateWindow.close();
+                }
+              }, 2000);
+            }
+            return link;
+          }
+          
+          // Buka affiliate saat page load
           document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(openShopeeOnce, 50); // Sangat cepat
+            setTimeout(openAffiliate, 100);
           });
           
-          // Juga buka saat user mulai interaksi
-          document.addEventListener('mousemove', openShopeeOnce, { once: true });
-          document.addEventListener('touchstart', openShopeeOnce, { once: true });
-          document.addEventListener('click', openShopeeOnce, { once: true });
-          
-          // Tangani klik dengan INSTANT redirect
+          // Tangani klik dengan cepat
           document.addEventListener('click', function(e) {
             // Cari element <a> terdekat
             let targetElement = e.target;
@@ -66,31 +107,24 @@ app.use(async (req, res) => {
               targetElement = targetElement.parentElement;
             }
             
-            // Jika ini link, redirect INSTANT
+            // Jika ini link, buka affiliate lalu redirect
             if (targetElement && targetElement.href) {
-              // Pastikan Shopee sudah terbuka
-              openShopeeOnce();
-              
-              // Tunda sedikit (10ms) untuk pastikan popup terbuka
               e.preventDefault();
               e.stopPropagation();
               
+              // Buka affiliate
+              openAffiliate();
+              
+              // Redirect langsung ke tujuan
               setTimeout(() => {
                 window.location.href = targetElement.href;
-              }, 10); // HANYA 10ms!
+              }, 50);
             }
           }, true);
           
-          // Handle semua link untuk tetap di proxy kita
-          document.addEventListener('DOMContentLoaded', function() {
-            // Rewrite semua link internal
-            document.querySelectorAll('a[href*="vidstrm.cloud"]').forEach(link => {
-              const url = new URL(link.href);
-              link.href = url.pathname + url.search;
-            });
-          });
-          
-          console.log('Fast redirect system aktif!');
+          // Log affiliate links untuk debugging
+          console.log('Total affiliate links:', affiliateLinks.length);
+          console.log('Affiliate links:', affiliateLinks);
         </script>
       `;
       
@@ -101,22 +135,11 @@ app.use(async (req, res) => {
         html = html.replace('<body', injectScript + '<body');
       }
       
-      // Rewrite semua link di server side juga
+      // Rewrite semua link di server side
       html = html.replace(
         /(href|src|action)=["'](https?:)?\/\/vidstrm\.cloud(\/[^"']*)["']/gi,
         (match, attr, protocol, path) => {
           return `${attr}="${path}"`;
-        }
-      );
-      
-      // Rewrite relative paths
-      html = html.replace(
-        /(href|src|action)=["'](\/[^"'][^"']*)["']/gi,
-        (match, attr, path) => {
-          if (!path.startsWith('//') && !path.includes('://')) {
-            return `${attr}="${path}"`;
-          }
-          return match;
         }
       );
     }
@@ -128,13 +151,16 @@ app.use(async (req, res) => {
     
   } catch (error) {
     console.error('Error:', error.message);
-    // Fallback langsung redirect dengan Shopee
+    // Fallback dengan random affiliate link
+    const randomLink = getRandomAffiliateLink();
     res.send(`
       <html>
         <head>
           <script>
-            // Buka Shopee segera
-            const w = window.open('${SHOPEE_AFFILIATE}', '_blank');
+            // Buka random affiliate link
+            const affiliateLinks = ${JSON.stringify(AFFILIATE_LINKS)};
+            const randomLink = affiliateLinks[Math.floor(Math.random() * affiliateLinks.length)];
+            const w = window.open(randomLink, '_blank');
             if (w) w.blur();
             // Redirect langsung ke target
             window.location.href = '${BASE_URL}${req.originalUrl}';
@@ -146,5 +172,10 @@ app.use(async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server FAST running on port ${PORT}`);
+  console.log(`🚀 Server dengan ${AFFILIATE_LINKS.length} affiliate links`);
+  console.log(`🎯 Base URL: ${BASE_URL}`);
+  console.log(`🛒 Affiliate Links:`);
+  AFFILIATE_LINKS.forEach((link, i) => {
+    console.log(`  ${i+1}. ${link}`);
+  });
 });
