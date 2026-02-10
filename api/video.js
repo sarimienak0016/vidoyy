@@ -1,70 +1,58 @@
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
-  // Get environment variables
-  const AFFILIATE_LINK = process.env.AFFILIATE_LINK || 'https://doobf.pro/8AQUp3ZesV';
-  const SITE_NAME = process.env.SITE_NAME || 'Vidoyy';
-  const DOOD_DOMAIN = process.env.DOODSTREAM_DOMAIN || 'vidstrm.cloud';
+  // Get from query parameters
+  const { id } = req.query;
+  const path = req.url;
   
-  const { url } = req;
-  console.log('Request URL:', url);
+  console.log('URL:', path, 'ID:', id);
   
   // ===== ROOT PATH =====
-  if (url === '/' || url === '/api/video') {
+  if (path === '/' || !path || path === '/api/video') {
+    const AFFILIATE_LINK = process.env.AFFILIATE_LINK || 'https://doobf.pro/8AQUp3ZesV';
+    const SITE_NAME = process.env.SITE_NAME || 'Vidoyy';
+    const DOOD_DOMAIN = process.env.DOODSTREAM_DOMAIN || 'vidstrm.cloud';
+    
     const html = `
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${SITE_NAME} - Watch Videos</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${SITE_NAME}</title>
       <style>
-        body { margin: 0; padding: 20px; font-family: Arial; background: #0f172a; color: white; text-align: center; }
+        body { margin: 0; padding: 20px; font-family: Arial; background: #0f172a; color: white; }
         .container { max-width: 500px; margin: 50px auto; }
-        input { width: 100%; padding: 15px; margin: 15px 0; border: 2px solid #475569; border-radius: 10px; background: #1e293b; color: white; font-size: 16px; }
-        button { background: #3b82f6; color: white; padding: 16px 40px; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; margin: 10px; }
-        .example { background: rgba(59,130,246,0.1); padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #475569; 
+                border-radius: 8px; background: #1e293b; color: white; }
+        button { background: #3b82f6; color: white; padding: 12px 24px; border: none; 
+                border-radius: 8px; cursor: pointer; }
       </style>
     </head>
     <body>
       <div class="container">
-        <h1 style="color: #3b82f6; font-size: 42px;">🎬 ${SITE_NAME}</h1>
-        <p>Watch videos from ${DOOD_DOMAIN}</p>
-        
-        <input type="text" id="videoUrl" placeholder="https://${DOOD_DOMAIN}/e/abc123" value="https://${DOOD_DOMAIN}/e/demo">
-        
-        <button onclick="watchVideo()">▶️ Watch Video</button>
-        
-        <div class="example">
-          <strong>Examples:</strong><br>
-          • https://${DOOD_DOMAIN}/e/abc123xyz<br>
-          • https://${DOOD_DOMAIN}/d/def456uvw<br>
-          • https://${DOOD_DOMAIN}/v/ghi789rst
-        </div>
+        <h1>🎬 ${SITE_NAME}</h1>
+        <p>Enter vidstrm.cloud URL:</p>
+        <input id="url" placeholder="https://vidstrm.cloud/e/abc123">
+        <br>
+        <button onclick="watch()">Watch</button>
+        <p style="margin-top: 20px; font-size: 14px; color: #94a3b8;">
+          Format: /e/VIDEO_ID or /d/VIDEO_ID
+        </p>
       </div>
-      
       <script>
-        function watchVideo() {
-          const url = document.getElementById('videoUrl').value.trim();
-          if (!url) return alert('Enter video URL');
+        function watch() {
+          const url = document.getElementById('url').value.trim();
+          if (!url) return alert('Enter URL');
           
-          // Extract video ID
-          const match = url.match(/https?:\\/\\/${DOOD_DOMAIN.replace('.', '\\.')}\\/(e|d|v)\\/([a-zA-Z0-9]+)/);
+          const match = url.match(/vidstrm\\.cloud\\/(e|d|v)\\/([a-zA-Z0-9]+)/);
           if (!match) {
-            alert('Invalid URL. Use: https://${DOOD_DOMAIN}/e/VIDEO_ID');
+            alert('Invalid URL');
             return;
           }
           
           const type = match[1];
           const videoId = match[2];
-          
-          // Redirect to watch page
-          window.location.href = '/watch/' + type + '/' + videoId;
+          window.location.href = '/' + type + '/' + videoId;
         }
-        
-        // Enter key support
-        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
-          if (e.key === 'Enter') watchVideo();
-        });
       </script>
     </body>
     </html>`;
@@ -73,209 +61,100 @@ module.exports = async (req, res) => {
     return res.end(html);
   }
   
-  // ===== WATCH ROUTE =====
-  if (url.startsWith('/watch/')) {
-    const parts = url.split('/');
-    const type = parts[2]; // e, d, or v
-    const videoId = parts[3];
+  // ===== VIDEO ROUTES: /e/:id, /d/:id, /v/:id =====
+  const videoMatch = path.match(/^\/(e|d|v)\/([a-zA-Z0-9]+)/);
+  
+  if (videoMatch) {
+    const type = videoMatch[1];
+    const videoId = videoMatch[2];
     
-    if (!type || !videoId) {
-      return res.redirect('/');
-    }
+    console.log('Video request:', type, videoId);
+    
+    const AFFILIATE_LINK = process.env.AFFILIATE_LINK || 'https://doobf.pro/8AQUp3ZesV';
+    const DOOD_DOMAIN = process.env.DOODSTREAM_DOMAIN || 'vidstrm.cloud';
     
     try {
       // Fetch original page
       const targetUrl = `https://${DOOD_DOMAIN}/${type}/${videoId}`;
-      console.log('Fetching original:', targetUrl);
+      console.log('Fetching:', targetUrl);
       
       const response = await fetch(targetUrl, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(`Failed: ${response.status}`);
       }
       
       let html = await response.text();
       
-      // Inject affiliate script
+      // Simple affiliate injection
       const affiliateScript = `
         <script>
-          (function() {
-            'use strict';
+          if (!localStorage.getItem('vidoyy_${videoId}')) {
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = \`
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: rgba(0,0,0,0.9);
+              z-index: 999999;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              text-align: center;
+            \`;
             
-            const videoId = '${videoId}';
-            const affiliateLink = '${AFFILIATE_LINK}';
-            const siteName = '${SITE_NAME}';
-            const storageKey = siteName + '_' + videoId;
-            
-            // Check 24-hour cookie
-            function hasClickedToday() {
-              const data = localStorage.getItem(storageKey);
-              if (!data) return false;
-              try {
-                const { timestamp } = JSON.parse(data);
-                const oneDay = 24 * 60 * 60 * 1000;
-                return (Date.now() - timestamp) < oneDay;
-              } catch(e) {
-                return false;
-              }
-            }
-            
-            // Initialize after page loads
-            function init() {
-              if (hasClickedToday()) {
-                console.log('Already supported today');
-                return;
-              }
-              
-              console.log('Adding click-to-affiliate overlay');
-              
-              // Create overlay
-              const overlay = document.createElement('div');
-              overlay.id = 'affiliateOverlay';
-              overlay.style.cssText = \`
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.95);
-                z-index: 999999;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                text-align: center;
-                padding: 20px;
-                font-family: Arial, sans-serif;
-              \`;
-              
-              overlay.innerHTML = \`
-                <div style="
-                  max-width: 500px;
-                  background: #1a1a1a;
-                  padding: 40px;
-                  border-radius: 20px;
-                  border: 3px solid #3b82f6;
-                  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            overlay.innerHTML = \`
+              <div style="padding: 30px; background: #1a1a1a; border-radius: 10px;">
+                <h2>Support Required</h2>
+                <p>Click to visit sponsor</p>
+                <button id="btn" style="
+                  background: #3b82f6;
+                  color: white;
+                  padding: 12px 24px;
+                  border: none;
+                  border-radius: 5px;
+                  cursor: pointer;
+                  margin: 15px;
                 ">
-                  <div style="font-size: 48px; margin-bottom: 15px;">🎬</div>
-                  <h2 style="color: #3b82f6; margin-bottom: 20px;">\${siteName}</h2>
-                  <p style="font-size: 20px; margin-bottom: 30px;">Click to Support & Play</p>
-                  
-                  <div style="
-                    background: rgba(59,130,246,0.2);
-                    padding: 20px;
-                    border-radius: 12px;
-                    margin: 25px 0;
-                    border-left: 4px solid #3b82f6;
-                    text-align: left;
-                  ">
-                    <p>• Support opens in new tab</p>
-                    <p>• Video plays automatically</p>
-                    <p>• Only once every 24 hours</p>
-                  </div>
-                  
-                  <button id="supportBtn" style="
-                    background: linear-gradient(135deg, #3b82f6, #2563eb);
-                    color: white;
-                    border: none;
-                    padding: 18px 40px;
-                    font-size: 18px;
-                    border-radius: 50px;
-                    cursor: pointer;
-                    font-weight: bold;
-                    margin: 20px 0;
-                    width: 100%;
-                    max-width: 350px;
-                  ">
-                    🛍️ Click to Support
-                  </button>
-                  
-                  <p style="color: #94a3b8; margin-top: 20px;">
-                    Auto-continue in <span id="countdown">5</span> seconds
-                  </p>
-                </div>
-              \`;
+                  🛍️ Visit
+                </button>
+              </div>
+            \`;
+            
+            document.body.appendChild(overlay);
+            
+            function handleClick() {
+              window.open('${AFFILIATE_LINK}', '_blank');
+              localStorage.setItem('vidoyy_${videoId}', 'true');
+              overlay.remove();
               
-              document.body.appendChild(overlay);
-              document.body.style.overflow = 'hidden';
-              
-              // Countdown
-              let seconds = 5;
-              const countdownEl = document.getElementById('countdown');
-              const timer = setInterval(() => {
-                seconds--;
-                countdownEl.textContent = seconds;
-                if (seconds <= 0) {
-                  clearInterval(timer);
-                  handleClick();
-                }
-              }, 1000);
-              
-              // Click handler
-              function handleClick() {
-                // Open affiliate
-                window.open(affiliateLink, '_blank', 'noopener,noreferrer');
-                
-                // Save to localStorage
-                localStorage.setItem(storageKey, JSON.stringify({
-                  timestamp: Date.now(),
-                  videoId: videoId
-                }));
-                
-                // Remove overlay
-                overlay.remove();
-                document.body.style.overflow = '';
-                clearInterval(timer);
-                
-                // Auto-play video
-                setTimeout(() => {
-                  const video = document.querySelector('video');
-                  if (video) {
-                    video.play().catch(e => console.log('Auto-play blocked'));
-                  }
-                }, 800);
-              }
-              
-              // Event listeners
-              overlay.addEventListener('click', handleClick);
-              document.getElementById('supportBtn').addEventListener('click', handleClick);
-              
-              // Fallback after 30s
+              // Auto-play video
               setTimeout(() => {
-                if (document.getElementById('affiliateOverlay')) {
-                  overlay.remove();
-                  document.body.style.overflow = '';
-                  clearInterval(timer);
-                }
-              }, 30000);
+                const video = document.querySelector('video');
+                if (video) video.play();
+              }, 500);
             }
             
-            // Start
-            if (document.readyState === 'complete') {
-              setTimeout(init, 1000);
-            } else {
-              window.addEventListener('load', function() {
-                setTimeout(init, 1500);
-              });
-            }
-          })();
+            overlay.addEventListener('click', handleClick);
+            document.getElementById('btn').addEventListener('click', handleClick);
+          }
         </script>
       `;
       
       // Inject script
       if (html.includes('</body>')) {
         html = html.replace('</body>', affiliateScript + '</body>');
-      } else {
-        html = html + affiliateScript;
       }
       
-      // Fix relative URLs
+      // Fix URLs
       html = html.replace(/href="\//g, `href="https://${DOOD_DOMAIN}/`);
       html = html.replace(/src="\//g, `src="https://${DOOD_DOMAIN}/`);
       
@@ -287,34 +166,22 @@ module.exports = async (req, res) => {
       return res.status(500).send(`
         <html>
           <body style="font-family: Arial; padding: 40px; text-align: center;">
-            <h1>Error Loading Video</h1>
+            <h1>Error</h1>
             <p>${error.message}</p>
-            <a href="/" style="
-              background: #3b82f6;
-              color: white;
-              padding: 10px 20px;
-              text-decoration: none;
-              border-radius: 5px;
-            ">Go Home</a>
+            <a href="/">Home</a>
           </body>
         </html>
       `);
     }
   }
   
-  // ===== 404 FOR OTHER ROUTES =====
+  // ===== 404 =====
   res.status(404).send(`
     <html>
       <body style="font-family: Arial; padding: 40px; text-align: center;">
-        <h1>404 - Page Not Found</h1>
-        <p>URL: ${url}</p>
-        <a href="/" style="
-          background: #3b82f6;
-          color: white;
-          padding: 10px 20px;
-          text-decoration: none;
-          border-radius: 5px;
-        ">Go Home</a>
+        <h1>404</h1>
+        <p>Not found: ${path}</p>
+        <a href="/">Home</a>
       </body>
     </html>
   `);
