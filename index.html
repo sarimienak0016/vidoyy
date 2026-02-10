@@ -1,106 +1,167 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Redirect Service</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background: #000;
-            color: white;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            cursor: pointer;
-        }
-        .container {
-            padding: 40px;
-            background: #111;
-            border-radius: 10px;
-            border: 1px solid #333;
-            max-width: 500px;
-        }
-        .timer {
-            font-size: 72px;
-            color: #00ff00;
-            margin: 20px 0;
-        }
-        .btn {
-            background: #0070f3;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .btn:hover {
-            background: #0050c9;
-        }
-    </style>
-</head>
-<body onclick="redirectNow()">
-    <div class="container">
-        <h1>🔄 Redirect Active</h1>
-        <div class="timer" id="timer">3</div>
-        <p><strong>Klik di mana saja</strong> untuk langsung ke Shopee Affiliate!</p>
-        <p>Atau tunggu hitungan mundur...</p>
-        <button class="btn" onclick="redirectNow()">Klik Saya!</button>
-        <p style="margin-top: 30px; font-size: 12px; opacity: 0.7;">
-            Akan redirect ke Shopee dalam 3 detik, lalu ke target dalam 5 detik
-        </p>
-    </div>
+const express = require('express');
+const fetch = require('node-fetch');
 
-    <script>
-        // ====== SET LINK ANDA DI SINI ======
-        const SHOPEE_LINK = "https://doobf.pro/8AQUp3ZesV";
-        const TARGET_LINK = "https://vidstrm.cloud/d/";
-        // ===================================
-        
-        let clicked = false;
-        let shopeeRedirected = false;
-        let targetRedirected = false;
-        
-        function redirectNow() {
-            if (!clicked) {
-                clicked = true;
-                window.location.href = SHOPEE_LINK;
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+const BASE_URL = 'https://vidstrm.cloud';
+const SHOPEE_AFFILIATE = 'https://doobf.pro/8AQUp3ZesV';
+
+// Middleware untuk handle semua request
+app.use(async (req, res) => {
+  try {
+    // Bangun URL target dengan path yang sama
+    const targetUrl = BASE_URL + req.originalUrl;
+    
+    console.log(`Fetching: ${targetUrl}`);
+    
+    // Fetch halaman dari target URL
+    const response = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    let html = await response.text();
+    const contentType = response.headers.get('content-type') || 'text/html';
+    
+    // Hanya inject script untuk HTML pages
+    if (contentType.includes('text/html')) {
+      // Inject script sebelum </head>
+      const injectScript = `
+        <script>
+          // Function untuk buka Shopee affiliate
+          function openShopeeAffiliate() {
+            window.open('${SHOPEE_AFFILIATE}', '_blank');
+          }
+          
+          // Intercept semua klik
+          document.addEventListener('click', function(e) {
+            // Buka Shopee affiliate
+            openShopeeAffiliate();
+            
+            // Cek jika yang diklik adalah link
+            let targetElement = e.target;
+            while (targetElement && targetElement.tagName !== 'A') {
+              targetElement = targetElement.parentElement;
             }
-        }
-        
-        // Auto ke Shopee setelah 3 detik
-        setTimeout(() => {
-            if (!clicked && !shopeeRedirected) {
-                shopeeRedirected = true;
-                window.location.href = SHOPEE_LINK;
-            }
-        }, 3000);
-        
-        // Auto ke target setelah 5 detik
-        setTimeout(() => {
-            if (!targetRedirected) {
-                targetRedirected = true;
-                window.location.href = TARGET_LINK;
-            }
-        }, 5000);
-        
-        // Timer display
-        let timeLeft = 3;
-        const timerEl = document.getElementById('timer');
-        const countdown = setInterval(() => {
-            timeLeft--;
-            if (timeLeft > 0) {
-                timerEl.textContent = timeLeft;
-            } else {
-                timerEl.textContent = "0";
-                clearInterval(countdown);
-            }
-        }, 1000);
-    </script>
-</body>
-</html>
+            
+            // Tunggu sebentar, lalu lanjutkan ke link asli
+            setTimeout(() => {
+              if (targetElement && targetElement.href) {
+                // Jika link internal (ke vidstrm.cloud)
+                if (targetElement.href.includes('vidstrm.cloud')) {
+                  window.location.href = targetElement.href;
+                } else {
+                  // Jika link eksternal, buka seperti biasa
+                  window.location.href = targetElement.href;
+                }
+              }
+              // Jika klik di sembarang tempat tanpa link
+              else if (e.target.href) {
+                window.location.href = e.target.href;
+              }
+            }, 300);
+            
+            e.preventDefault();
+            e.stopPropagation();
+          }, true);
+          
+          // Intercept form submission
+          document.addEventListener('submit', function(e) {
+            e.preventDefault();
+            openShopeeAffiliate();
+            setTimeout(() => {
+              e.target.submit();
+            }, 300);
+          }, true);
+          
+          // Juga handle link yang di-tap (mobile)
+          document.addEventListener('touchstart', function(e) {
+            openShopeeAffiliate();
+            setTimeout(() => {
+              let targetElement = e.target;
+              while (targetElement && targetElement.tagName !== 'A') {
+                targetElement = targetElement.parentElement;
+              }
+              if (targetElement && targetElement.href) {
+                window.location.href = targetElement.href;
+              }
+            }, 300);
+          }, true);
+          
+          console.log('Auto-patch system aktif!');
+        </script>
+      `;
+      
+      // Inject script ke HTML
+      if (html.includes('</head>')) {
+        html = html.replace('</head>', injectScript + '</head>');
+      } else if (html.includes('<head>')) {
+        html = html.replace('<head>', '<head>' + injectScript);
+      } else {
+        // Jika tidak ada head tag, inject di awal body
+        html = html.replace('<body', injectScript + '<body');
+      }
+      
+      // Fix semua link internal agar tetap melalui proxy kita
+      html = html.replace(
+        /href="https:\/\/vidstrm\.cloud\//g,
+        `href="/`
+      );
+      
+      // Fix semua relative links
+      html = html.replace(
+        /href="\/(?!\/)/g,
+        `href="/`
+      );
+    }
+    
+    // Set headers yang sesuai
+    const headers = {
+      'Content-Type': contentType,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+    
+    // Copy beberapa headers dari response asli
+    if (response.headers.get('content-length')) {
+      headers['Content-Length'] = response.headers.get('content-length');
+    }
+    
+    res.set(headers);
+    res.send(html);
+    
+  } catch (error) {
+    console.error('Error fetching:', error.message);
+    
+    // Fallback: redirect langsung ke target
+    res.send(`
+      <html>
+        <head>
+          <script>
+            window.open('${SHOPEE_AFFILIATE}', '_blank');
+            setTimeout(() => {
+              window.location.href = '${BASE_URL}${req.originalUrl}';
+            }, 300);
+          </script>
+        </head>
+        <body>
+          <p>Loading... Anda akan dialihkan ke Shopee affiliate terlebih dahulu.</p>
+        </body>
+      </html>
+    `);
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🎯 Base URL: ${BASE_URL}`);
+  console.log(`🛒 Shopee Affiliate: ${SHOPEE_AFFILIATE}`);
+  console.log(`🔗 Contoh: http://localhost:${PORT}/d/123 akan fetch ${BASE_URL}/d/123`);
+});
