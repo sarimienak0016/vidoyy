@@ -1,8 +1,33 @@
 {
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  },
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/public/index.html"
+      "source": "/e/:id",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/d/:id",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/v/:id",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/api",
+      "destination": "/api/index.js"
     }
-  ]
+  ],
+  "buildCommand": null,
+  "outputDirectory": "public",
+  "devCommand": null
 }
