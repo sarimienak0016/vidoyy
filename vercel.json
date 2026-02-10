@@ -1,0 +1,38 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/public/index.html"
+    },
+    {
+      "source": "/e/:id",
+      "destination": "/api/proxy/[...slug]"
+    },
+    {
+      "source": "/d/:id",
+      "destination": "/api/proxy/[...slug]"
+    },
+    {
+      "source": "/v/:id",
+      "destination": "/api/proxy/[...slug]"
+    },
+    {
+      "source": "/watch/:id",
+      "destination": "/api/proxy/[...slug]"
+    },
+    {
+      "source": "/api/proxy/:path*",
+      "destination": "/api/proxy/[...slug]"
+    }
+  ],
+  "functions": {
+    "api/proxy/[...slug].js": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "AFFILIATE_LINK": "https://doobf.pro/8AQUp3ZesV",
+    "SITE_NAME": "VidStream",
+    "DOODSTREAM_DOMAIN": "vidstrm.cloud"
+  }
+}
