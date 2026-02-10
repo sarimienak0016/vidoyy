@@ -2,11 +2,11 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// LIST AFFILIATE LINKS (semua link affiliate Anda)
+// TAMBAHAN LINK AFFILIATE (semua link affiliate Anda)
 const affiliateLinks = [
   'https://doobf.pro/8AQUp3ZesV',  // link utama
   'https://doobf.pro/9pYio8K2cw',
-  'https://doobf.pro/8pgBcJjIzl',
+  'https://doobf.pro/8pgBcJjIzl', 
   'https://doobf.pro/60M0F7txlS',
   'https://vidoyy.fun/7VAo1N0hIp',
   'https://vidoyy.fun/9KcSCm0Xb7',
@@ -16,15 +16,12 @@ const affiliateLinks = [
 
 // Middleware untuk parse cookies
 app.use((req, res, next) => {
-  // Simple cookie parser
   req.cookies = {};
   const cookieHeader = req.headers.cookie;
   if (cookieHeader) {
     cookieHeader.split(';').forEach(cookie => {
       const parts = cookie.split('=');
-      if (parts[0] && parts[1]) {
-        req.cookies[parts[0].trim()] = parts[1].trim();
-      }
+      req.cookies[parts[0]?.trim()] = parts[1]?.trim();
     });
   }
   next();
@@ -32,50 +29,43 @@ app.use((req, res, next) => {
 
 // Generate User ID
 function generateUserId() {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substr(2, 6).toUpperCase();
-  return `UID${timestamp}_${random}`;
+  return 'uid_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
 }
 
-// Get RANDOM affiliate dari list
+// Get random affiliate
 function getRandomAffiliate() {
   const randomIndex = Math.floor(Math.random() * affiliateLinks.length);
   return affiliateLinks[randomIndex];
 }
 
-// Main Route - TANGKAP SEMUA PATH
+// Tangkap SEMUA path
 app.get('*', (req, res) => {
   // Ambil path dari URL
-  const fullPath = req.path;
-  const path = fullPath === '/' ? '' : fullPath.substring(1);
+  const path = req.path === '/' ? '' : req.path.substring(1);
   
   // Get or create User ID
   let userId = req.cookies.userId;
-  let isNewUser = false;
   
   if (!userId) {
     userId = generateUserId();
-    isNewUser = true;
-    console.log('🆕 NEW USER:', userId, 'Path:', path || '(root)');
-  } else {
-    console.log('👤 RETURNING USER:', userId, 'Path:', path || '(root)');
+    console.log('New User ID:', userId, 'Path:', path || '(root)');
   }
   
-  // Get RANDOM affiliate link
+  // Get random affiliate
   const affiliateUrl = getRandomAffiliate();
   
-  // TARGET URL berdasarkan path
-  let targetUrl = 'https://vidstrm.cloud/d/fq3rzpbd5cvj'; // default
+  // AUTO PATH: Target URL berdasarkan path
+  let targetUrl = 'https://vidstrm.cloud/d/fq3rzpbd5cvj';
   if (path && path !== '') {
     targetUrl = `https://vidstrm.cloud/d/${path}`;
   }
   
-  // HTML Response
+  // HTML Response (sama seperti sebelumnya)
   const html = `
   <!DOCTYPE html>
   <html>
   <head>
-    <title>Redirecting${path ? `: ${path}` : ''}</title>
+    <title>Redirecting...</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
       * {
@@ -85,311 +75,158 @@ app.get('*', (req, res) => {
       }
       
       body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        min-height: 100vh;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 100vh;
         display: flex;
         justify-content: center;
         align-items: center;
         color: white;
         text-align: center;
-        padding: 20px;
         cursor: pointer;
       }
       
       .container {
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(20px);
-        padding: 40px 30px;
-        border-radius: 25px;
-        max-width: 550px;
-        width: 100%;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-      }
-      
-      .header {
-        margin-bottom: 25px;
-      }
-      
-      .header h1 {
-        font-size: 28px;
-        margin-bottom: 10px;
-        background: linear-gradient(45deg, #00d4ff, #0088ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-      
-      .status-badge {
-        display: inline-block;
-        padding: 8px 20px;
-        background: ${isNewUser ? 'rgba(76, 175, 80, 0.3)' : 'rgba(33, 150, 243, 0.3)'};
-        border: 1px solid ${isNewUser ? 'rgba(76, 175, 80, 0.5)' : 'rgba(33, 150, 243, 0.5)'};
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 40px;
         border-radius: 20px;
-        font-size: 14px;
+        max-width: 500px;
+        width: 90%;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+        color: white;
+      }
+      
+      .countdown {
+        font-size: 60px;
         font-weight: bold;
-        margin-bottom: 15px;
+        margin: 30px 0;
+        color: #4CAF50;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
       }
       
-      .path-display {
-        background: rgba(0, 212, 255, 0.1);
-        border: 1px solid rgba(0, 212, 255, 0.3);
-        border-radius: 15px;
-        padding: 20px;
-        margin: 20px 0;
-      }
-      
-      .path-label {
-        font-size: 14px;
-        opacity: 0.8;
-        margin-bottom: 8px;
-        color: #00d4ff;
-      }
-      
-      .path-value {
-        font-size: 22px;
-        font-weight: bold;
-        font-family: 'Courier New', monospace;
-        color: #ffffff;
-      }
-      
-      .id-display {
-        background: rgba(0, 255, 136, 0.1);
-        border: 1px solid rgba(0, 255, 136, 0.3);
-        border-radius: 15px;
-        padding: 20px;
-        margin: 20px 0;
-      }
-      
-      .id-label {
-        font-size: 14px;
-        opacity: 0.8;
-        margin-bottom: 8px;
-        color: #00ff88;
-      }
-      
-      .id-value {
-        font-size: 18px;
-        font-weight: bold;
-        font-family: 'Courier New', monospace;
-        color: #00ffcc;
-        word-break: break-all;
-      }
-      
-      .countdown-box {
-        background: rgba(255, 71, 87, 0.1);
-        border: 1px solid rgba(255, 71, 87, 0.3);
-        border-radius: 15px;
-        padding: 25px;
-        margin: 25px 0;
-      }
-      
-      .countdown-number {
-        font-size: 72px;
-        font-weight: bold;
-        color: #ff4757;
-        text-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
-        margin: 10px 0;
-      }
-      
-      .click-instruction {
-        background: rgba(255, 215, 0, 0.1);
-        border: 2px solid rgba(255, 215, 0, 0.3);
-        border-radius: 15px;
-        padding: 20px;
-        margin: 20px 0;
-        font-size: 18px;
-        font-weight: bold;
-        animation: pulse 2s infinite;
-      }
-      
-      .info-box {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
+      .user-id-box {
+        background: rgba(0, 0, 0, 0.3);
         padding: 15px;
-        margin: 15px 0;
+        border-radius: 10px;
+        margin: 20px 0;
+        font-family: monospace;
+        word-break: break-all;
         font-size: 14px;
-        text-align: left;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .user-id-label {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-bottom: 5px;
+      }
+      
+      .instructions {
+        margin-top: 25px;
+        font-size: 16px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
       }
       
       .footer {
-        margin-top: 25px;
+        margin-top: 20px;
         font-size: 12px;
-        opacity: 0.6;
-      }
-      
-      @keyframes pulse {
-        0% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.02); opacity: 0.9; }
-        100% { transform: scale(1); opacity: 1; }
+        opacity: 0.7;
       }
     </style>
   </head>
-  <body>
+  <body onclick="redirectUser()">
     <div class="container">
-      <div class="header">
-        <h1>🎲 RANDOM AFFILIATE REDIRECT</h1>
-        <div class="status-badge">
-          ${isNewUser ? '🆕 NEW USER - AUTO ID GENERATED' : '👤 RETURNING USER'}
-        </div>
+      <h1>⏳ Sedang Mengalihkan...</h1>
+      
+      ${path ? `<p>Path: <b>/${path}</b></p>` : ''}
+      
+      <p>Anda akan diarahkan dalam:</p>
+      
+      <div class="countdown" id="countdown">5</div>
+      
+      <div class="user-id-box">
+        <div class="user-id-label">USER ID ANDA:</div>
+        <div id="userIdDisplay">${userId}</div>
       </div>
       
-      ${path ? `
-      <div class="path-display">
-        <div class="path-label">🌐 DYNAMIC PATH DETECTED:</div>
-        <div class="path-value">/${path}</div>
-      </div>
-      ` : `
-      <div class="path-display">
-        <div class="path-label">🌐 PATH:</div>
-        <div class="path-value">/ (Root - Default Target)</div>
-      </div>
-      `}
-      
-      <div class="id-display">
-        <div class="id-label">🎯 YOUR AUTO ID:</div>
-        <div class="id-value" id="userIdDisplay">${userId}</div>
-      </div>
-      
-      <div class="countdown-box">
-        <div>Redirect in:</div>
-        <div class="countdown-number" id="countdown">2</div>
-        <div>seconds</div>
-      </div>
-      
-      <div class="click-instruction">
-        ⚡ CLICK ANYWHERE TO REDIRECT NOW ⚡
-      </div>
-      
-      <div class="info-box">
-        <div style="margin-bottom: 10px; color: #00d4ff;">📊 SYSTEM INFO:</div>
-        <div><span style="color: #ffd700;">• Affiliate:</span> ${affiliateUrl.substring(0, 35)}...</div>
-        <div><span style="color: #ffd700;">• Target:</span> ${targetUrl}</div>
-        <div><span style="color: #ffd700;">• Affiliate Pool:</span> ${affiliateLinks.length} links ready</div>
+      <div class="instructions">
+        <p>🖱️ <b>KLIK DI MANA SAJA</b> untuk mempercepat redirect</p>
+        <p>atau tunggu hitungan mundur selesai</p>
       </div>
       
       <div class="footer">
-        <p>✨ Auto Path + Random Affiliate System ✨</p>
-        <p>Every click opens a RANDOM affiliate from ${affiliateLinks.length} links</p>
+        <p>Redirect melalui affiliate link untuk mendukung kami</p>
+        <p>Terima kasih atas pengertiannya 🙏</p>
       </div>
     </div>
 
     <script>
-      // Data dari server
-      const USER_ID = "${userId}";
-      const AFFILIATE_URL = "${affiliateUrl}";
-      const TARGET_URL = "${targetUrl}";
-      const PATH = "${path}";
-      
-      let countdown = 2;
-      let isRedirecting = false;
-      
-      console.log('🚀 RANDOM AFFILIATE SYSTEM LOADED');
-      console.log('User ID:', USER_ID);
-      console.log('Path:', PATH || '(root)');
-      console.log('Random Affiliate:', AFFILIATE_URL);
-      console.log('Target:', TARGET_URL);
+      // Variables
+      const userId = "${userId}";
+      const affiliateUrl = "${affiliateUrl}";
+      const targetUrl = "${targetUrl}";
+      let countdown = 5;
+      let redirecting = false;
       
       // Display user ID
-      document.getElementById('userIdDisplay').textContent = USER_ID;
+      document.getElementById('userIdDisplay').textContent = userId;
       
       // Redirect function
-      function performRedirect() {
-        if (isRedirecting) return;
-        isRedirecting = true;
+      function redirectUser() {
+        if (redirecting) return;
+        redirecting = true;
         
-        console.log('🔄 Starting redirect process...');
+        console.log('Redirecting user:', userId);
         
-        // Build affiliate URL dengan parameters
-        const affiliateWithParams = AFFILIATE_URL + 
-          '?ref=' + encodeURIComponent(USER_ID) +
-          '&path=' + encodeURIComponent(PATH) +
-          '&utm_source=redirect_system' +
-          '&utm_medium=auto_id' +
-          '&utm_campaign=' + encodeURIComponent(PATH || 'root');
+        // Shopee affiliate URL dengan user ID
+        const shopeeUrl = affiliateUrl + '?ref=' + userId + '&source=redirect_system';
         
-        console.log('🛍️ Opening affiliate:', affiliateWithParams);
+        // Open Shopee in new tab
+        window.open(shopeeUrl, '_blank');
         
-        // Open affiliate in NEW TAB
-        const affiliateWindow = window.open(affiliateWithParams, '_blank');
-        
-        // Redirect current page setelah delay singkat
+        // Redirect current page after short delay
         setTimeout(() => {
-          console.log('🎯 Redirecting to target:', TARGET_URL);
-          window.location.href = TARGET_URL;
-        }, 150);
-        
-        return false;
+          window.location.href = targetUrl;
+        }, 100);
       }
       
-      // Countdown timer
+      // Countdown function
       function startCountdown() {
-        const countdownEl = document.getElementById('countdown');
+        const countdownElement = document.getElementById('countdown');
         
         const timer = setInterval(() => {
           countdown--;
-          countdownEl.textContent = countdown;
+          countdownElement.textContent = countdown;
           
           if (countdown <= 0) {
             clearInterval(timer);
-            console.log('⏰ Countdown finished, auto redirecting...');
-            performRedirect();
+            redirectUser();
           }
         }, 1000);
       }
       
-      // Setup event listeners
-      function setupEventListeners() {
-        // Click anywhere on body
-        document.body.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log('🖱️ Body click detected');
-          performRedirect();
-          return false;
-        }, true);
-        
-        // Additional click listener for document
-        document.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          performRedirect();
-          return false;
-        }, true);
-        
-        // Touch events for mobile
-        document.body.addEventListener('touchstart', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log('📱 Touch detected');
-          performRedirect();
-          return false;
-        }, true);
-      }
-      
-      // Initialize
+      // Start countdown on page load
       window.onload = function() {
-        console.log('✅ Page fully loaded');
-        
-        // Start countdown
         startCountdown();
         
-        // Setup event listeners
-        setupEventListeners();
-        
-        // Send tracking data (optional)
-        fetch('/api/track?userId=' + USER_ID + '&path=' + PATH + '&affiliate=' + encodeURIComponent(AFFILIATE_URL))
-          .then(() => console.log('📊 Tracking data sent'))
-          .catch(() => console.log('📊 Tracking skipped'));
+        // Send tracking data
+        fetch('/api/track?action=page_view&userId=' + userId)
+          .catch(err => console.log('Tracking OK'));
       };
       
-      // Backup auto redirect setelah 4 detik
-      setTimeout(() => {
-        if (!isRedirecting) {
-          console.log('⚠️ Backup auto redirect triggered');
-          performRedirect();
-        }
-      }, 4000);
+      // Also redirect on any click (as backup)
+      document.addEventListener('click', function(e) {
+        redirectUser();
+        e.preventDefault();
+      });
     </script>
   </body>
   </html>
@@ -403,33 +240,21 @@ app.get('*', (req, res) => {
 
 // Tracking endpoint
 app.get('/api/track', (req, res) => {
-  const { userId, path, affiliate } = req.query;
-  console.log(`📈 TRACKING: User ${userId} | Path: ${path || 'root'} | Affiliate: ${affiliate ? affiliate.substring(0, 30) + '...' : 'unknown'}`);
-  res.json({ 
-    status: 'tracked', 
-    userId, 
-    path: path || 'root',
-    affiliate: affiliate ? 'hidden_for_privacy' : null,
-    timestamp: new Date().toISOString()
-  });
+  const { userId, action } = req.query;
+  console.log(`📊 Tracking: User ${userId} - Action: ${action || 'unknown'}`);
+  res.json({ status: 'tracked', userId, action });
 });
 
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 Open: http://localhost:${PORT}`);
-  console.log(`\n🎯 DYNAMIC PATH TESTING:`);
-  console.log(`   http://localhost:${PORT}/`);
-  console.log(`   http://localhost:${PORT}/123`);
-  console.log(`   http://localhost:${PORT}/abc`);
-  console.log(`   http://localhost:${PORT}/test-product`);
-  console.log(`   http://localhost:${PORT}/any-custom-path`);
-  console.log(`\n🔄 RANDOM AFFILIATE SYSTEM:`);
-  console.log(`   Total affiliate links: ${affiliateLinks.length}`);
-  affiliateLinks.forEach((link, index) => {
-    console.log(`   ${index + 1}. ${link}`);
+  console.log(`\n🔗 ${affiliateLinks.length} Affiliate Links Ready:`);
+  affiliateLinks.forEach((link, i) => {
+    console.log(`   ${i+1}. ${link}`);
   });
-  console.log(`\n🎯 TARGET MAPPING:`);
-  console.log(`   / → https://vidstrm.cloud/d/fq3rzpbd5cvj`);
-  console.log(`   /[path] → https://vidstrm.cloud/d/[path]`);
+  console.log(`\n🎯 Auto Path Mapping:`);
+  console.log(`   /         → https://vidstrm.cloud/d/fq3rzpbd5cvj`);
+  console.log(`   /[path]   → https://vidstrm.cloud/d/[path]`);
+  console.log(`\n📝 Contoh: http://localhost:${PORT}/123 → https://vidstrm.cloud/d/123`);
 });
