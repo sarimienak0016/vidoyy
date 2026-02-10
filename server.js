@@ -39,8 +39,8 @@ function getRandomAffiliate() {
 
 // Tangkap semua path
 app.get('*', (req, res) => {
-  // Ambil path dari URL
-  const path = req.path === '/' ? '' : req.path.substring(1);
+  // Ambil FULL path dari URL
+  const fullPath = req.path;
   
   // Get or create User ID
   let userId = req.cookies.userId;
@@ -51,16 +51,29 @@ app.get('*', (req, res) => {
   // Get random affiliate
   const affiliateUrl = getRandomAffiliate();
   
- // Auto path target URL
-let targetUrl;
-
-if (path) {
-    // Jika ada path: /abc → https://vidstrm.cloud/d/abc
-    targetUrl = `https://vidstrm.cloud/d/${path}`;
-} else {
-    // Jika root: / → https://vidstrm.cloud/ (atau default page)
+  // ⭐⭐⭐ AUTO PATH SYSTEM ⭐⭐⭐
+  // Jika path mengandung /d/123, ambil bagian 123-nya
+  let targetPath = '';
+  
+  if (fullPath.startsWith('/d/')) {
+    // Contoh: /d/123 → ambil "123"
+    targetPath = fullPath.substring(3); // Hapus "/d/"
+  } else if (fullPath !== '/') {
+    // Contoh: /123 → ambil "123" juga
+    targetPath = fullPath.substring(1); // Hapus "/"
+  }
+  
+  // Build target URL
+  let targetUrl;
+  if (targetPath) {
+    // Jika ada path: → https://vidstrm.cloud/d/[path]
+    targetUrl = `https://vidstrm.cloud/d/${targetPath}`;
+  } else {
+    // Jika root: → https://vidstrm.cloud/
     targetUrl = 'https://vidstrm.cloud/';
-}
+  }
+  
+  console.log(`Path: ${fullPath} → Target: ${targetUrl}`);
   
   // HTML Response
   const html = `
@@ -105,18 +118,31 @@ if (path) {
         font-family: monospace;
         word-break: break-all;
       }
+      .path-info {
+        background: rgba(0,0,0,0.2);
+        padding: 10px;
+        border-radius: 8px;
+        margin: 10px 0;
+      }
     </style>
   </head>
   <body onclick="redirectUser()">
     <div class="container">
       <h1>⏳ Sedang Mengalihkan...</h1>
-      ${path ? `<p>Path: <b>/${path}</b></p>` : ''}
+      
+      <div class="path-info">
+        <div>Path: <b>${fullPath}</b></div>
+        <div>Target: <b>${targetUrl}</b></div>
+      </div>
+      
       <p>Anda akan diarahkan dalam:</p>
       <div class="countdown" id="countdown">3</div>
+      
       <div class="user-id">
         <div>User ID:</div>
         <div id="userIdDisplay">${userId}</div>
       </div>
+      
       <p style="margin-top: 20px;">Klik di mana saja untuk mempercepat</p>
     </div>
 
@@ -170,9 +196,16 @@ if (path) {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`\nTest URLs:`);
-  console.log(`http://localhost:${PORT}/123`);
-  console.log(`http://localhost:${PORT}/abc`);
-  console.log(`http://localhost:${PORT}/`);
-  console.log(`\n${affiliateLinks.length} affiliate links ready`);
+  console.log(`\n🎯 AUTO PATH SYSTEM:`);
+  console.log(`   http://localhost:${PORT}/d/123`);
+  console.log(`     → https://vidstrm.cloud/d/123`);
+  console.log(`\n   http://localhost:${PORT}/d/abc`);
+  console.log(`     → https://vidstrm.cloud/d/abc`);
+  console.log(`\n   http://localhost:${PORT}/d/fq3rzpbd5cvj`);
+  console.log(`     → https://vidstrm.cloud/d/fq3rzpbd5cvj`);
+  console.log(`\n   http://localhost:${PORT}/`);
+  console.log(`     → https://vidstrm.cloud/`);
+  console.log(`\n   http://localhost:${PORT}/123`);
+  console.log(`     → https://vidstrm.cloud/d/123`);
+  console.log(`\n🎲 ${affiliateLinks.length} affiliate links (random)`);
 });
