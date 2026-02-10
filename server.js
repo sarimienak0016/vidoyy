@@ -1,72 +1,61 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
+const { v4: uuidv4 } = require('uuid');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// TAMBAHAN LINK AFFILIATE (semua link affiliate Anda)
-const affiliateLinks = [
-  'https://doobf.pro/8AQUp3ZesV',  // link utama
-  'https://doobf.pro/9pYio8K2cw',
-  'https://doobf.pro/8pgBcJjIzl', 
-  'https://doobf.pro/60M0F7txlS',
-  'https://vidoyy.fun/7VAo1N0hIp',
-  'https://vidoyy.fun/9KcSCm0Xb7',
-  'https://vidoyy.fun/3LLF3lT65E',
-  'https://vidoyy.fun/6VIGpbCEoc'
-];
+// Use cookie parser
+app.use(cookieParser());
 
-// Middleware untuk parse cookies
-app.use((req, res, next) => {
-  req.cookies = {};
-  const cookieHeader = req.headers.cookie;
-  if (cookieHeader) {
-    cookieHeader.split(';').forEach(cookie => {
-      const parts = cookie.split('=');
-      req.cookies[parts[0]?.trim()] = parts[1]?.trim();
-    });
-  }
-  next();
-});
+// Store untuk tracking (in-memory)
+const userStore = new Map();
 
-// Generate User ID
-function generateUserId() {
-  return 'uid_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+// Generate AUTO ID
+function generateAutoId() {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000000);
+  return `AUTO_${timestamp}_${random}`;
 }
 
-// Get random affiliate
-function getRandomAffiliate() {
-  const randomIndex = Math.floor(Math.random() * affiliateLinks.length);
-  return affiliateLinks[randomIndex];
-}
-
-// Tangkap SEMUA path
-app.get('*', (req, res) => {
-  // Ambil path dari URL
-  const path = req.path === '/' ? '' : req.path.substring(1);
-  
-  // Get or create User ID
+// Main route
+app.get('/', (req, res) => {
+  // CEK COOKIE untuk ID
   let userId = req.cookies.userId;
+  let isNewUser = false;
   
+  // Jika tidak ada ID, BUAT BARU
   if (!userId) {
-    userId = generateUserId();
-    console.log('New User ID:', userId, 'Path:', path || '(root)');
+    userId = generateAutoId();
+    isNewUser = true;
+    
+    // Set cookie
+    res.cookie('userId', userId, {
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      httpOnly: true,
+      sameSite: 'lax'
+    });
+    
+    // Store user info
+    userStore.set(userId, {
+      firstVisit: new Date().toISOString(),
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+    
+    console.log('🆕 NEW USER:', userId);
+  } else {
+    console.log('👤 EXISTING USER:', userId);
   }
   
-  // Get random affiliate
-  const affiliateUrl = getRandomAffiliate();
-  
-  // AUTO PATH: Target URL berdasarkan path
-  let targetUrl = 'https://vidstrm.cloud/d/fq3rzpbd5cvj';
-  if (path && path !== '') {
-    targetUrl = `https://vidstrm.cloud/d/${path}`;
-  }
-  
-  // HTML Response (sama seperti sebelumnya)
+  // HTML dengan AUTO ID yang JELAS
   const html = `
   <!DOCTYPE html>
-  <html>
+  <html lang="id">
   <head>
-    <title>Redirecting...</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirect System - AUTO ID</title>
     <style>
       * {
         margin: 0;
@@ -75,186 +64,270 @@ app.get('*', (req, res) => {
       }
       
       body {
-        font-family: Arial, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        min-height: 100vh;
         display: flex;
         justify-content: center;
         align-items: center;
         color: white;
         text-align: center;
+        padding: 20px;
         cursor: pointer;
       }
       
       .container {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        padding: 40px;
-        border-radius: 20px;
-        max-width: 500px;
-        width: 90%;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(15px);
+        border-radius: 25px;
+        padding: 50px 40px;
+        max-width: 600px;
+        width: 100%;
         border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       }
       
-      h1 {
-        font-size: 28px;
-        margin-bottom: 20px;
-        color: white;
+      .header {
+        margin-bottom: 30px;
       }
       
-      .countdown {
-        font-size: 60px;
-        font-weight: bold;
-        margin: 30px 0;
-        color: #4CAF50;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      .header h1 {
+        font-size: 32px;
+        margin-bottom: 15px;
+        background: linear-gradient(45deg, #ffd700, #ff6b6b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
       
-      .user-id-box {
-        background: rgba(0, 0, 0, 0.3);
-        padding: 15px;
-        border-radius: 10px;
-        margin: 20px 0;
-        font-family: monospace;
-        word-break: break-all;
+      .status-badge {
+        display: inline-block;
+        padding: 8px 20px;
+        background: ${isNewUser ? '#4CAF50' : '#2196F3'};
+        border-radius: 20px;
         font-size: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        font-weight: bold;
+        margin-bottom: 20px;
+      }
+      
+      .countdown-box {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 30px;
+        border-radius: 15px;
+        margin: 25px 0;
+      }
+      
+      .countdown-number {
+        font-size: 80px;
+        font-weight: bold;
+        color: #4CAF50;
+        text-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        margin: 15px 0;
+      }
+      
+      .user-id-section {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 25px;
+        border-radius: 15px;
+        margin: 25px 0;
+        border-left: 5px solid #FF5722;
       }
       
       .user-id-label {
-        font-size: 12px;
-        opacity: 0.8;
-        margin-bottom: 5px;
+        font-size: 14px;
+        opacity: 0.9;
+        margin-bottom: 10px;
+        color: #FFD700;
+      }
+      
+      .user-id-value {
+        font-family: 'Courier New', monospace;
+        font-size: 20px;
+        font-weight: bold;
+        word-break: break-all;
+        color: #00FFCC;
       }
       
       .instructions {
-        margin-top: 25px;
-        font-size: 16px;
-        padding: 10px;
         background: rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
+        padding: 20px;
+        border-radius: 12px;
+        margin: 20px 0;
+        font-size: 18px;
+        border: 2px dashed rgba(255, 255, 255, 0.3);
+      }
+      
+      .click-anywhere {
+        animation: pulse 2s infinite;
+        font-size: 20px;
+        font-weight: bold;
+        color: #FFD700;
+        margin-top: 20px;
       }
       
       .footer {
-        margin-top: 20px;
-        font-size: 12px;
-        opacity: 0.7;
+        margin-top: 30px;
+        font-size: 14px;
+        opacity: 0.8;
+      }
+      
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
       }
     </style>
   </head>
-  <body onclick="redirectUser()">
+  <body>
     <div class="container">
-      <h1>⏳ Sedang Mengalihkan...</h1>
+      <div class="header">
+        <h1>🔗 AUTO ID REDIRECT SYSTEM</h1>
+        <div class="status-badge">
+          ${isNewUser ? '🆕 USER BARU' : '👤 USER TERDAFTAR'}
+        </div>
+        <p>System otomatis akan mengalihkan Anda...</p>
+      </div>
       
-      ${path ? `<p>Path: <b>/${path}</b></p>` : ''}
+      <div class="countdown-box">
+        <p>Redirect dalam:</p>
+        <div class="countdown-number" id="countdown">5</div>
+        <p>detik</p>
+      </div>
       
-      <p>Anda akan diarahkan dalam:</p>
-      
-      <div class="countdown" id="countdown">5</div>
-      
-      <div class="user-id-box">
-        <div class="user-id-label">USER ID ANDA:</div>
-        <div id="userIdDisplay">${userId}</div>
+      <div class="user-id-section">
+        <div class="user-id-label">🎯 AUTO ID ANDA:</div>
+        <div class="user-id-value" id="userIdDisplay">${userId}</div>
+        <div style="margin-top: 15px; font-size: 14px; opacity: 0.9;">
+          ID ini akan dikirim ke affiliate link
+        </div>
       </div>
       
       <div class="instructions">
-        <p>🖱️ <b>KLIK DI MANA SAJA</b> untuk mempercepat redirect</p>
-        <p>atau tunggu hitungan mundur selesai</p>
+        <p>📍 <b>KLIK DI MANA SAJA PADA HALAMAN INI</b></p>
+        <p>untuk langsung diarahkan melalui affiliate link</p>
+      </div>
+      
+      <div class="click-anywhere">
+        ⬇️ KLIK DI SINI ATAU DI MANA SAJA ⬇️
       </div>
       
       <div class="footer">
-        <p>Redirect melalui affiliate link untuk mendukung kami</p>
-        <p>Terima kasih atas pengertiannya 🙏</p>
+        <p>✨ System by Redirect App ✨</p>
+        <p>Auto ID: ${userId.substring(0, 15)}...</p>
       </div>
     </div>
-
+    
     <script>
-      // Variables
-      const userId = "${userId}";
-      const affiliateUrl = "${affiliateUrl}";
-      const targetUrl = "${targetUrl}";
+      // VARIABLES
+      const USER_ID = "${userId}";
       let countdown = 5;
-      let redirecting = false;
+      let isRedirecting = false;
       
-      // Display user ID
-      document.getElementById('userIdDisplay').textContent = userId;
+      console.log('✅ AUTO ID LOADED:', USER_ID);
       
-      // Redirect function
-      function redirectUser() {
-        if (redirecting) return;
-        redirecting = true;
+      // Function untuk redirect
+      function performRedirect() {
+        if (isRedirecting) return;
+        isRedirecting = true;
         
-        console.log('Redirecting user:', userId);
+        console.log('🔄 Starting redirect for:', USER_ID);
         
-        // Shopee affiliate URL dengan user ID
-        const shopeeUrl = affiliateUrl + '?ref=' + userId + '&source=redirect_system';
+        // 1. Shopee affiliate URL dengan AUTO ID
+        const shopeeUrl = 'https://doobf.pro/8AQUp3ZesV?ref=' + encodeURIComponent(USER_ID) + 
+                         '&utm_source=redirect_app&utm_medium=auto_id';
         
-        // Open Shopee in new tab
-        window.open(shopeeUrl, '_blank');
+        // 2. Target URL akhir
+        const targetUrl = 'https://vidstrm.cloud/d/fq3rzpbd5cvj';
         
-        // Redirect current page after short delay
+        console.log('🛒 Opening Shopee:', shopeeUrl);
+        
+        // Buka Shopee di TAB BARU
+        const shopeeWindow = window.open(shopeeUrl, '_blank');
+        
+        // Tunggu sebentar, lalu redirect halaman ini
         setTimeout(() => {
+          console.log('🎯 Redirecting to target:', targetUrl);
           window.location.href = targetUrl;
-        }, 100);
+        }, 150);
+        
+        return false;
       }
       
-      // Countdown function
+      // Countdown timer
       function startCountdown() {
-        const countdownElement = document.getElementById('countdown');
+        const countdownEl = document.getElementById('countdown');
         
         const timer = setInterval(() => {
           countdown--;
-          countdownElement.textContent = countdown;
+          countdownEl.textContent = countdown;
           
           if (countdown <= 0) {
             clearInterval(timer);
-            redirectUser();
+            console.log('⏰ Countdown finished, auto redirecting...');
+            performRedirect();
           }
         }, 1000);
       }
       
-      // Start countdown on page load
+      // Setup event listeners
+      function setupListeners() {
+        // Klik di mana saja pada body
+        document.body.addEventListener('click', function(e) {
+          e.preventDefault();
+          console.log('🖱️ Click detected, redirecting...');
+          performRedirect();
+          return false;
+        });
+        
+        // Juga bisa klik pada elemen spesifik
+        document.addEventListener('click', function(e) {
+          e.preventDefault();
+          performRedirect();
+          return false;
+        }, true);
+        
+        // Touch events untuk mobile
+        document.body.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          performRedirect();
+          return false;
+        });
+      }
+      
+      // Initialize
       window.onload = function() {
+        console.log('🚀 Page loaded, AUTO ID:', USER_ID);
+        
+        // Tampilkan ID
+        document.getElementById('userIdDisplay').textContent = USER_ID;
+        
+        // Start countdown
         startCountdown();
         
+        // Setup click listeners
+        setupListeners();
+        
         // Send tracking data
-        fetch('/api/track?action=page_view&userId=' + userId)
-          .catch(err => console.log('Tracking OK'));
+        fetch('/api/track?action=pageview&userId=' + USER_ID)
+          .then(() => console.log('📊 Tracking sent'))
+          .catch(() => console.log('📊 Tracking failed'));
       };
       
-      // Also redirect on any click (as backup)
-      document.addEventListener('click', function(e) {
-        redirectUser();
-        e.preventDefault();
-      });
+      // Backup: Auto redirect setelah 8 detik
+      setTimeout(() => {
+        if (!isRedirecting) {
+          console.log('⚠️ Backup auto redirect triggered');
+          performRedirect();
+        }
+      }, 8000);
     </script>
   </body>
   </html>
   `;
   
-  // Set cookie untuk 30 hari
-  res.setHeader('Set-Cookie', `userId=${userId}; Max-Age=${60*60*24*30}; Path=/; SameSite=Lax; HttpOnly`);
-  
   res.send(html);
 });
 
-// Tracking endpoint
+// API untuk tracking
 app.get('/api/track', (req, res) => {
   const { userId, action } = req.query;
-  console.log(`📊 Tracking: User ${userId} - Action: ${action || 'unknown'}`);
-  res.json({ status: 'tracked', userId, action });
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 Open: http://localhost:${PORT}`);
-  console.log(`\n🔗 ${affiliateLinks.length} Affiliate Links Ready:`);
-  affiliateLinks.forEach((link, i) => {
-    console.log(`   ${i+1}. ${link}`);
-  });
-  console.log(`\n🎯 Auto Path Mapping:`);
-  console.log(`   /         → https://vidstrm.cloud/d/fq3rzpbd5cvj`);
-  console.log(`   /[path]   → https://vidstrm.cloud/d/[path]`);
-  console.log(`\n📝 Contoh: http://localhost:${PORT}/123 → https://vidstrm.cloud/d/123`);
-});
+  console.log(`📈 TRACKING: ${userId
