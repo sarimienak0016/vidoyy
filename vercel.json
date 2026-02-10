@@ -6,28 +6,10 @@
     }
   },
   "rewrites": [
-    {
-      "source": "/e/:id",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/d/:id",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/v/:id",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/api",
-      "destination": "/api/index.js"
-    }
+    { "source": "/(e|d|v)/:id", "destination": "/api" },
+    { "source": "/", "destination": "/api" }
   ],
   "buildCommand": null,
-  "outputDirectory": "public",
+  "outputDirectory": null,
   "devCommand": null
 }
