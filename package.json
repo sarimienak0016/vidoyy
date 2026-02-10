@@ -1,13 +1,11 @@
 {
-  "name": "auto-id-redirect",
+  "name": "simple-auto-path",
   "version": "1.0.0",
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.0",
-    "cookie-parser": "^1.4.6",
-    "uuid": "^9.0.1"
+    "express": "^4.18.0"
   }
 }
