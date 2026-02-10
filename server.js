@@ -21,7 +21,7 @@ const AFFILIATE_LINKS = [
 // Function untuk konversi ke Shopee deep link (jika perlu)
 function convertToShopeeDeepLink(url) {
   // Jika sudah format shopee:// atau shoppe://
-  if (url.includes('doobf.pro') || url.includes('vidoyy.fun')) {
+  if (url.includes('shopee.co.id') || url.includes('shopee.co.id')) {
     // Link affiliate sudah otomatis redirect ke app Shopee
     return url;
   }
