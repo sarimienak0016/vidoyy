@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redirecting...</title>
+    <meta charset="utf-8">
+    <style>
+        body { 
+            font-family: Arial; 
+            text-align: center; 
+            padding: 50px; 
+        }
+        .box { 
+            background: #f0f0f0; 
+            padding: 30px; 
+            border-radius: 10px; 
+            display: inline-block; 
+        }
+    </style>
+    <script>
+        // Link Anda
+        const TARGET_URL = "https://vidstrm.cloud/d/";
+        const SHOPEE_URL = "https://doobf.pro/8AQUp3ZesV";
+        
+        let clicked = false;
+        
+        // Klik di mana saja
+        document.addEventListener('click', function() {
+            if (!clicked) {
+                clicked = true;
+                window.location.href = SHOPEE_URL;
+            }
+        });
+        
+        // Auto ke Shopee setelah 3 detik
+        setTimeout(function() {
+            if (!clicked) {
+                window.location.href = SHOPEE_URL;
+            }
+        }, 3000);
+        
+        // Auto ke target setelah 5 detik
+        setTimeout(function() {
+            window.location.href = TARGET_URL;
+        }, 5000);
+    </script>
+</head>
+<body>
+    <div class="box">
+        <h2>Redirect Service Aktif</h2>
+        <p>⏱ Tunggu 3 detik untuk auto redirect...</p>
+        <p>atau <strong>KLIK DI MANA SAJA</strong></p>
+        <p><small>akan redirect ke Shopee affiliate</small></p>
+    </div>
+</body>
+</html>
