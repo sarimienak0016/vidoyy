@@ -7,12 +7,20 @@
   },
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/e/:id",
+      "destination": "/api/video"
+    },
+    {
+      "source": "/d/:id",
+      "destination": "/api/video"
+    },
+    {
+      "source": "/v/:id",
+      "destination": "/api/video"
+    },
+    {
+      "source": "/",
       "destination": "/api/video"
     }
-  ],
-  "buildCommand": null,
-  "outputDirectory": "public",
-  "devCommand": null,
-  "installCommand": "npm install"
+  ]
 }
