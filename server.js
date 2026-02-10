@@ -51,11 +51,16 @@ app.get('*', (req, res) => {
   // Get random affiliate
   const affiliateUrl = getRandomAffiliate();
   
-  // Auto path target URL
-  let targetUrl = 'https://vidstrm.cloud/d/fq3rzpbd5cvj';
-  if (path) {
+ // Auto path target URL
+let targetUrl;
+
+if (path) {
+    // Jika ada path: /abc → https://vidstrm.cloud/d/abc
     targetUrl = `https://vidstrm.cloud/d/${path}`;
-  }
+} else {
+    // Jika root: / → https://vidstrm.cloud/ (atau default page)
+    targetUrl = 'https://vidstrm.cloud/';
+}
   
   // HTML Response
   const html = `
