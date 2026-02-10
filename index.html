@@ -1,24 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Redirect Service</title>
+    <title>Loading...</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <script>
-        // SET LINK ANDA DI SINI
+        // ========== SET LINK ANDA DI SINI ==========
+        const SHOPEE_AFFILIATE = "https://doobf.pro/8AQUp3ZesV";
         const TARGET_URL = "https://vidstrm.cloud/d/";
-        const SHOPEE_URL = "https://doobf.pro/8AQUp3ZesV";
+        // ===========================================
         
         let clicked = false;
         let redirected = false;
         
-        // Fungsi redirect ke Shopee
+        // Redirect ke Shopee
         function goToShopee() {
             if (!redirected) {
                 redirected = true;
-                window.location.href = SHOPEE_URL;
+                window.location.href = SHOPEE_AFFILIATE;
             }
         }
         
-        // Fungsi redirect ke target
+        // Redirect ke target
         function goToTarget() {
             if (!redirected) {
                 redirected = true;
@@ -26,9 +30,8 @@
             }
         }
         
-        // Event klik
-        document.addEventListener('click', function(e) {
-            e.preventDefault();
+        // Klik di mana saja
+        document.addEventListener('click', function() {
             if (!clicked) {
                 clicked = true;
                 goToShopee();
@@ -48,107 +51,120 @@
                 goToTarget();
             }
         }, 5000);
+        
+        // Display timer
+        let count = 3;
+        const timer = setInterval(function() {
+            count--;
+            if (count <= 0) {
+                clearInterval(timer);
+            }
+        }, 1000);
     </script>
     
     <style>
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             color: white;
+            text-align: center;
             cursor: pointer;
         }
         
         .container {
-            text-align: center;
-            padding: 40px;
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            padding: 40px;
             border-radius: 20px;
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             max-width: 90%;
             width: 500px;
         }
         
         h1 {
-            margin-bottom: 20px;
             font-size: 2.5em;
-        }
-        
-        p {
-            margin: 15px 0;
-            font-size: 1.2em;
-            line-height: 1.6;
+            margin-bottom: 10px;
         }
         
         .timer {
-            font-size: 3em;
+            font-size: 4em;
             font-weight: bold;
             margin: 20px 0;
             color: #ffeb3b;
         }
         
         .instructions {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.2);
             padding: 15px;
             border-radius: 10px;
-            margin-top: 20px;
+            margin: 20px 0;
         }
         
         .highlight {
-            background: yellow;
-            color: black;
-            padding: 3px 8px;
-            border-radius: 5px;
+            background: #ffeb3b;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 4px;
             font-weight: bold;
+        }
+        
+        .link-info {
+            font-size: 0.8em;
+            opacity: 0.8;
+            margin-top: 30px;
+            word-break: break-all;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔄 Redirect Active</h1>
+        <h1>🚀 Redirect Active</h1>
+        <p>System akan redirect otomatis...</p>
         
-        <div class="timer" id="timer">3s</div>
-        
-        <p>Klik di <span class="highlight">mana saja</span> untuk ke Shopee Affiliate!</p>
-        <p>Atau tunggu hitungan mundur...</p>
+        <div class="timer">3</div>
         
         <div class="instructions">
-            <p><strong>📢 Cara kerja:</strong></p>
-            <p>• Klik = langsung ke Shopee</p>
-            <p>• Tidak klik (3 detik) = auto ke Shopee</p>
-            <p>• Setelah 5 detik = ke link tujuan</p>
+            <p><strong>📋 Cara Kerja:</strong></p>
+            <p>• <span class="highlight">KLIK DI MANA SAJA</span> → langsung ke Shopee Affiliate</p>
+            <p>• Tidak klik → otomatis ke Shopee setelah 3 detik</p>
+            <p>• Setelah 5 detik → ke link tujuan</p>
         </div>
         
-        <p style="margin-top: 30px; font-size: 0.9em; opacity: 0.8;">
-            Redirect ke: <span id="currentUrl"></span>
+        <p style="margin-top: 20px;">
+            ⚠️ <strong>Halaman ini akan otomatis redirect</strong>
         </p>
+        
+        <div class="link-info">
+            <div>Shopee: <span id="shopee-link"></span></div>
+            <div>Target: <span id="target-link"></span></div>
+        </div>
     </div>
     
     <script>
-        // Update timer display
+        // Tampilkan link
+        document.getElementById('shopee-link').textContent = SHOPEE_AFFILIATE;
+        document.getElementById('target-link').textContent = TARGET_URL;
+        
+        // Animasi timer
         let timeLeft = 3;
-        const timerEl = document.getElementById('timer');
-        const urlEl = document.getElementById('currentUrl');
+        const timerEl = document.querySelector('.timer');
         
-        urlEl.textContent = TARGET_URL;
-        
-        const timerInterval = setInterval(() => {
+        const countdown = setInterval(() => {
             timeLeft--;
-            if (timeLeft > 0) {
-                timerEl.textContent = timeLeft + 's';
-            } else {
+            timerEl.textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
                 timerEl.textContent = 'Redirecting...';
-                clearInterval(timerInterval);
+                clearInterval(countdown);
             }
         }, 1000);
     </script>
