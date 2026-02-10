@@ -400,4 +400,21 @@
         
         // Contoh URL untuk testing
         const exampleUrls = [
-            'https://vidstrm.cloud/e
+            'https://vidstrm.cloud/e/abc123xyz',
+            'https://vidstrm.cloud/d/def456uvw',
+            'https://vidstrm.cloud/v/ghi789rst'
+        ];
+        
+        // Fill dengan contoh random
+        document.getElementById('videoUrl').value = 
+            exampleUrls[Math.floor(Math.random() * exampleUrls.length)];
+            
+        // Enter key support
+        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                watchVideo();
+            }
+        });
+    </script>
+</body>
+</html>
