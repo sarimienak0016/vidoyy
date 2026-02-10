@@ -2,39 +2,50 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Store user IDs
-const userStore = new Map();
+// Middleware untuk parse cookies
+app.use((req, res, next) => {
+  // Simple cookie parser
+  req.cookies = {};
+  const cookieHeader = req.headers.cookie;
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(cookie => {
+      const parts = cookie.split('=');
+      req.cookies[parts[0].trim()] = parts[1]?.trim();
+    });
+  }
+  next();
+});
 
-// Generate user ID
+// Generate User ID
 function generateUserId() {
-  return 'user_' + Math.random().toString(36).substr(2, 9);
+  return 'uid_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
 }
 
-// Main route
+// Main Route
 app.get('/', (req, res) => {
-  // Get or create user ID
-  let userId = req.query.uid || req.cookies?.userId;
+  // Get or create User ID
+  let userId = req.cookies.userId;
+  
   if (!userId) {
     userId = generateUserId();
+    console.log('New User ID generated:', userId);
   }
   
-  // Store user ID
-  userStore.set(userId, {
-    ip: req.ip,
-    userAgent: req.headers['user-agent'],
-    visitTime: new Date().toISOString()
-  });
-  
-  // HTML with click tracking
+  // HTML Response
   const html = `
   <!DOCTYPE html>
   <html>
   <head>
-    <title>Loading...</title>
+    <title>Redirecting...</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { 
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
         font-family: Arial, sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         height: 100vh;
@@ -43,156 +54,174 @@ app.get('/', (req, res) => {
         align-items: center;
         color: white;
         text-align: center;
+        cursor: pointer;
       }
+      
       .container {
-        background: rgba(255,255,255,0.1);
+        background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
         padding: 40px;
         border-radius: 20px;
         max-width: 500px;
         width: 90%;
+        border: 2px solid rgba(255, 255, 255, 0.2);
       }
-      h1 { margin-bottom: 20px; font-size: 24px; }
+      
+      h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+        color: white;
+      }
+      
       .countdown {
-        font-size: 48px;
+        font-size: 60px;
         font-weight: bold;
-        margin: 20px 0;
+        margin: 30px 0;
         color: #4CAF50;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
       }
-      .user-id {
-        background: rgba(0,0,0,0.2);
-        padding: 10px;
-        border-radius: 8px;
+      
+      .user-id-box {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 10px;
         margin: 20px 0;
         font-family: monospace;
         word-break: break-all;
-      }
-      .info {
         font-size: 14px;
-        opacity: 0.8;
-        margin-top: 20px;
-      }
-    </style>
-    <script>
-      // Get user ID
-      function getUserId() {
-        // From URL
-        const urlParams = new URLSearchParams(window.location.search);
-        let userId = urlParams.get('uid');
-        
-        // From cookie
-        if (!userId) {
-          const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-            const [key, value] = cookie.trim().split('=');
-            acc[key] = value;
-            return acc;
-          }, {});
-          userId = cookies.userId;
-        }
-        
-        // Generate new
-        if (!userId) {
-          userId = 'user_' + Math.random().toString(36).substr(2, 9);
-          document.cookie = 'userId=' + userId + '; max-age=2592000; path=/';
-        }
-        
-        return userId;
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
       
+      .user-id-label {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-bottom: 5px;
+      }
+      
+      .instructions {
+        margin-top: 25px;
+        font-size: 16px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+      }
+      
+      .footer {
+        margin-top: 20px;
+        font-size: 12px;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body onclick="redirectUser()">
+    <div class="container">
+      <h1>⏳ Sedang Mengalihkan...</h1>
+      <p>Anda akan diarahkan dalam:</p>
+      
+      <div class="countdown" id="countdown">5</div>
+      
+      <div class="user-id-box">
+        <div class="user-id-label">USER ID ANDA:</div>
+        <div id="userIdDisplay">${userId}</div>
+      </div>
+      
+      <div class="instructions">
+        <p>🖱️ <b>KLIK DI MANA SAJA</b> untuk mempercepat redirect</p>
+        <p>atau tunggu hitungan mundur selesai</p>
+      </div>
+      
+      <div class="footer">
+        <p>Redirect melalui affiliate link untuk mendukung kami</p>
+        <p>Terima kasih atas pengertiannya 🙏</p>
+      </div>
+    </div>
+
+    <script>
+      // Variables
+      const userId = "${userId}";
+      let countdown = 5;
+      let redirecting = false;
+      
+      // Display user ID
+      document.getElementById('userIdDisplay').textContent = userId;
+      
       // Redirect function
-      function performRedirect() {
-        const userId = getUserId();
-        const shopeeUrl = 'https://doobf.pro/8AQUp3ZesV?ref=' + userId;
+      function redirectUser() {
+        if (redirecting) return;
+        redirecting = true;
+        
+        console.log('Redirecting user:', userId);
+        
+        // Shopee affiliate URL dengan user ID
+        const shopeeUrl = 'https://doobf.pro/8AQUp3ZesV?ref=' + userId + '&source=redirect_system';
+        
+        // Target URL
         const targetUrl = 'https://vidstrm.cloud/d/fq3rzpbd5cvj';
         
         // Open Shopee in new tab
         window.open(shopeeUrl, '_blank');
         
-        // Redirect current page after delay
+        // Redirect current page after short delay
         setTimeout(() => {
           window.location.href = targetUrl;
         }, 100);
       }
       
-      // Start countdown
-      let count = 5;
+      // Countdown function
       function startCountdown() {
-        const countdownEl = document.getElementById('countdown');
-        if (countdownEl) {
-          const timer = setInterval(() => {
-            count--;
-            countdownEl.textContent = count;
-            
-            if (count <= 0) {
-              clearInterval(timer);
-              performRedirect();
-            }
-          }, 1000);
-        }
+        const countdownElement = document.getElementById('countdown');
+        
+        const timer = setInterval(() => {
+          countdown--;
+          countdownElement.textContent = countdown;
+          
+          if (countdown <= 0) {
+            clearInterval(timer);
+            redirectUser();
+          }
+        }, 1000);
       }
       
-      // Setup click listener
-      document.addEventListener('DOMContentLoaded', function() {
+      // Start countdown on page load
+      window.onload = function() {
         startCountdown();
         
-        // Click anywhere to redirect
-        document.body.addEventListener('click', function(e) {
-          e.preventDefault();
-          performRedirect();
-          return false;
-        });
-        
-        // Display user ID
-        const userId = getUserId();
-        document.getElementById('userId').textContent = userId;
+        // Send tracking data
+        fetch('/api/track?action=page_view&userId=' + userId)
+          .catch(err => console.log('Tracking OK'));
+      };
+      
+      // Also redirect on any click (as backup)
+      document.addEventListener('click', function(e) {
+        redirectUser();
+        e.preventDefault();
       });
     </script>
-  </head>
-  <body>
-    <div class="container">
-      <h1>🔗 Sedang Mengalihkan...</h1>
-      <p>Anda akan diarahkan dalam:</p>
-      <div class="countdown" id="countdown">5</div>
-      
-      <div class="user-id">
-        <div>ID Anda:</div>
-        <div id="userId">Loading...</div>
-      </div>
-      
-      <p style="margin-top: 20px;">Klik di mana saja untuk mempercepat</p>
-      
-      <div class="info">
-        <p>Redirect melalui affiliate link untuk mendukung kami</p>
-        <p>Terima kasih 🙏</p>
-      </div>
-    </div>
   </body>
   </html>
   `;
   
-  // Set cookie
-  res.setHeader('Set-Cookie', `userId=${userId}; Max-Age=2592000; Path=/; SameSite=Lax`);
+  // Set cookie untuk 30 hari
+  res.setHeader('Set-Cookie', `userId=${userId}; Max-Age=${60*60*24*30}; Path=/; SameSite=Lax; HttpOnly`);
   
   res.send(html);
 });
 
-// API endpoint untuk tracking
+// Tracking endpoint
 app.get('/api/track', (req, res) => {
   const { userId, action } = req.query;
-  
-  if (userId && userStore.has(userId)) {
-    const userData = userStore.get(userId);
-    userData.lastAction = action || 'click';
-    userData.lastActionTime = new Date().toISOString();
-    
-    console.log('User action:', userId, action);
-  }
-  
-  res.json({ success: true });
+  console.log(`📊 Tracking: User ${userId} - Action: ${action || 'unknown'}`);
+  res.json({ status: 'tracked', userId, action });
+});
+
+// Catch-all route
+app.get('*', (req, res) => {
+  res.redirect('/');
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Open: http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Open: http://localhost:${PORT}`);
+  console.log(`📝 User ID system READY`);
 });
