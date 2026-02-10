@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/d",
+      "destination": "/api/redirect"
+    },
+    {
+      "source": "/d/:path*",
+      "destination": "/api/redirect"
+    }
+  ]
+}
