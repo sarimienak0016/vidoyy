@@ -1,0 +1,15 @@
+{
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  },
+  "rewrites": [
+    { "source": "/(e|d|v)/:id", "destination": "/api" },
+    { "source": "/", "destination": "/api" }
+  ],
+  "buildCommand": null,
+  "outputDirectory": null,
+  "devCommand": null
+}
