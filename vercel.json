@@ -1,25 +1,13 @@
 {
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/api/proxy/[...slug]"
-    },
-    {
-      "source": "/e/:id",
-      "destination": "/api/proxy/[...slug]"
-    },
-    {
-      "source": "/d/:id",
-      "destination": "/api/proxy/[...slug]"
-    },
-    {
-      "source": "/v/:id",
-      "destination": "/api/proxy/[...slug]"
-    }
-  ],
   "functions": {
-    "api/proxy/[...slug].js": {
+    "api/video.js": {
       "maxDuration": 30
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/video"
+    }
+  ]
 }
