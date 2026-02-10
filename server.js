@@ -8,14 +8,14 @@ const BASE_URL = 'https://vidstrm.cloud';
 
 // SEMUA AFFILIATE LINKS - PASTIKAN SUDAH DEEP LINK
 const AFFILIATE_LINKS = [
-  'https://doobf.pro/8AQUp3ZesV',
-  'https://doobf.pro/9pYio8K2cw', 
-  'https://doobf.pro/8pgBcJjIzl',
-  'https://doobf.pro/60M0F7txlS',
-  'https://vidoyy.fun/7VAo1N0hIp',
-  'https://vidoyy.fun/9KcSCm0Xb7',
-  'https://vidoyy.fun/3LLF3lT65E',
-  'https://vidoyy.fun/6VIGpbCEoc'
+  'https://shopee.co.id/8AQUp3ZesV',
+  'https://shopee.co.id/9pYio8K2cw', 
+  'https://shopee.co.id/8pgBcJjIzl',
+  'https://shopee.co.id/60M0F7txlS',
+  'https://shopee.co.id/7VAo1N0hIp',
+  'https://shopee.co.id/9KcSCm0Xb7',
+  'https://shopee.co.id/3LLF3lT65E',
+  'https://shopee.co.id/6VIGpbCEoc'
 ];
 
 // Function untuk konversi ke Shopee deep link (jika perlu)
