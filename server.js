@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const BASE_URL = 'https://vidoza.net';
+const BASE_URL = 'https://videy.co';
 
 const AFFILIATE_LINKS = [
   'https://s.shopee.co.id/8AQUp3ZesV',
@@ -115,7 +115,7 @@ app.use(async (req, res) => {
     html = html.replace('</body>', script + infoBox + '</body>');
     
     // Fix internal links agar tetap melalui proxy kita
-    html = html.replace(/href="https:\/\/vidoza\.net\//g, 'href="/');
+    html = html.replace(/href="https:\/\/videy\.co\//g, 'href="/');
     
     res.set('Content-Type', 'text/html').send(html);
     
