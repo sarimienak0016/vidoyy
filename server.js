@@ -4,17 +4,25 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const BASE_URL = 'https://videy.co';
+const BASE_URL = 'https://vidstrm.cloud';
 
 const AFFILIATE_LINKS = [
-  'https://s.shopee.co.id/8AQUp3ZesV',
-  'https://s.shopee.co.id/9pYio8K2cw', 
-  'https://s.shopee.co.id/8pgBcJjIzl',
-  'https://s.shopee.co.id/60M0F7txlS',
-  'https://s.shopee.co.id/7VAo1N0hIp',
-  'https://s.shopee.co.id/9KcSCm0Xb7',
-  'https://s.shopee.co.id/3LLF3lT65E',
-  'https://s.shopee.co.id/6VIGpbCEoc'
+  'https://vt.tokopedia.com/t/ZS9JuAPN9y4W4-GI4rg/',
+  'https://vt.tokopedia.com/t/ZS9JuDEe5EsrJ-OSoEx/', 
+  'https://vt.tokopedia.com/t/ZS9JuDEe5EsrJ-OSoEx/',
+  'https://vt.tokopedia.com/t/ZS9JuU2kSatWF-oUtqE/',
+  'https://vt.tokopedia.com/t/ZS9JuUu4d63NG-d2tvr/',
+  'https://vt.tokopedia.com/t/ZS9JuyeXxhGP4-81pCP/',
+  'https://vt.tokopedia.com/t/ZS9JuyR5uftuG-h6CIi/',
+  'https://vt.tokopedia.com/t/ZS9JuyFXDuoHb-MFtB7/'
+];
+
+const SHOPEE_DEEP_LINKS = [
+  'intent://main#Intent;package=com.shopee.id;scheme=shopee;end',
+  'intent://main#Intent;package=com.shopee.id;action=android.intent.action.VIEW;scheme=shopee;end',
+  'shopee://',
+  'shopee.co.id://',
+  'com.shopee.id://'
 ];
 
 app.use(async (req, res) => {
@@ -25,109 +33,241 @@ app.use(async (req, res) => {
     const response = await fetch(targetUrl);
     let html = await response.text();
     
-    // SCRIPT: 1 KLIK → SHOPEE → REDIRECT ASLI
-    const script = `
-    <script>
-      const links = ${JSON.stringify(AFFILIATE_LINKS)};
-      const originalUrl = '${targetUrl}';
-      let hasClicked = false;
-      
-      function handleClick() {
-        if (hasClicked) return;
-        hasClicked = true;
-        
-        // 1. Buka Shopee affiliate
-        const shopeeUrl = links[Math.floor(Math.random() * links.length)];
-        window.open(shopeeUrl, '_blank');
-        
-        // 2. Langsung redirect ke URL asli (vidoza)
-        setTimeout(() => {
-          window.location.href = '${BASE_URL}${currentPath}';
-        }, 300);
-      }
-      
-      // Klik dimana saja di halaman
-      document.addEventListener('click', handleClick);
-      
-      // Auto-click setelah 7 detik
-      setTimeout(() => {
-        if (!hasClicked) handleClick();
-      }, 7000);
-    </script>
+    // Cek apakah ini file asset (css, js, gambar)
+    const isAsset = req.url.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|mp4|webm|ogg)$/i);
     
-    <style>
-      #redirect-info {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: #EE4D2D;
-        color: white;
-        padding: 15px;
-        border-radius: 10px;
-        font-family: Arial;
-        font-size: 14px;
-        z-index: 999999;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        max-width: 300px;
-      }
-      .countdown {
-        font-weight: bold;
-        background: white;
-        color: #EE4D2D;
-        padding: 3px 10px;
-        border-radius: 15px;
-        display: inline-block;
-        margin: 0 5px;
-      }
-    </style>
-    `;
+    if (isAsset) {
+      // Untuk asset, proxy dari videy.co
+      html = html.replace(/href="https:\/\/vidstrm\.cloud\//g, 'href="/');
+      html = html.replace(/src="https:\/\/vidstrm\.cloud\//g, 'src="/');
+      return res.set('Content-Type', 'text/html').send(html);
+    }
     
-    // INFO BOX
-    const infoBox = `
-    <div id="redirect-info">
-      <div style="display: flex; align-items: center; margin-bottom: 8px;">
-        <span style="font-size: 20px; margin-right: 10px;">⚡</span>
-        <div>
-          <b>Redirect otomatis dalam: <span class="countdown">7</span> detik</b>
+    // LANDING PAGE LENGKAP - SEMUA HALAMAN HTML KENA INI
+    const landingPage = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Video Stream</title>
+      <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        
+        body {
+          font-family: Arial, sans-serif;
+          height: 100vh;
+          overflow: hidden;
+        }
+        
+        #redirect-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.95);
+          color: white;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          z-index: 999999;
+          text-align: center;
+          padding: 20px;
+          cursor: pointer;
+        }
+        
+        .click-box {
+          background: #EE4D2D;
+          color: white;
+          padding: 20px 40px;
+          border-radius: 10px;
+          font-size: 24px;
+          font-weight: bold;
+          margin: 30px 0;
+          transition: transform 0.2s;
+          pointer-events: none;
+        }
+        
+        .instruction {
+          font-size: 18px;
+          margin-top: 20px;
+          opacity: 0.9;
+          pointer-events: none;
+        }
+        
+        h1 {
+          pointer-events: none;
+        }
+        
+        #redirect-overlay:hover .click-box {
+          transform: scale(1.05);
+        }
+        
+        #redirect-overlay:active {
+          background: rgba(0, 0, 0, 0.90);
+        }
+        
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(238, 77, 45, 0.7); }
+          70% { box-shadow: 0 0 0 20px rgba(238, 77, 45, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(238, 77, 45, 0); }
+        }
+        
+        .click-box {
+          animation: pulse 2s infinite;
+        }
+      </style>
+    </head>
+    <body>
+      <div id="redirect-overlay">
+        <h1>🎬 Video Player</h1>
+        <div class="click-box">
+          KLIK DIMANAPUN UNTUK PLAY VIDEO
+        </div>
+        <div class="instruction">
+          Klik di area manapun<br>
+          <small>Lanjut ke video</small>
         </div>
       </div>
-      <div style="font-size: 12px; opacity: 0.9;">
-        Klik <u>dimana saja</u> untuk play video
-      </div>
-    </div>
-    
-    <script>
-      // Update countdown
-      let timeLeft = 7;
-      const countdownEl = document.querySelector('.countdown');
-      const countdownInterval = setInterval(() => {
-        timeLeft--;
-        countdownEl.textContent = timeLeft;
-        if (timeLeft <= 0) {
-          clearInterval(countdownInterval);
-          document.getElementById('redirect-info').style.display = 'none';
+
+      <script>
+        // DEEP LINKS untuk buka APLIKASI Shopee (ACAK)
+        const SHOPEE_DEEP_LINKS = ${JSON.stringify(SHOPEE_DEEP_LINKS)};
+        
+        // AFFILIATE LINKS untuk fallback (ACAK)
+        const AFFILIATE_LINKS = ${JSON.stringify(AFFILIATE_LINKS)};
+        
+        const BASE_URL = '${BASE_URL}';
+        const CURRENT_PATH = '${currentPath}';
+        let hasClicked = false;
+        
+        // Fungsi untuk ambil link ACAK
+        function getRandomAffiliateLink() {
+          return AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
         }
-      }, 1000);
-    </script>
+        
+        // Fungsi buka aplikasi Shopee
+        function openShopeeApp() {
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+          const isAndroid = /Android/i.test(navigator.userAgent);
+          
+          if (!isMobile) {
+            window.open(getRandomAffiliateLink(), '_blank');
+            return;
+          }
+          
+          if (isAndroid) {
+            try {
+              window.location.href = 'intent://main#Intent;package=com.shopee.id;scheme=shopee;end';
+              setTimeout(() => {
+                if (!hasClicked) {
+                  window.location.href = getRandomAffiliateLink();
+                }
+              }, 2000);
+            } catch (e) {
+              window.location.href = getRandomAffiliateLink();
+            }
+          } else {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = 'shopee://';
+            document.body.appendChild(iframe);
+            
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+              setTimeout(() => {
+                if (document.body.contains(iframe) || !hasClicked) {
+                  window.location.href = getRandomAffiliateLink();
+                }
+              }, 500);
+            }, 500);
+          }
+        }
+        
+        function openShopeeWithTab() {
+          if (hasClicked) return;
+          hasClicked = true;
+          
+          const shopeeUrl = getRandomAffiliateLink();
+          window.open(shopeeUrl, '_blank');
+          
+          setTimeout(() => {
+            window.location.href = BASE_URL + CURRENT_PATH;
+          }, 300);
+        }
+        
+        function handleClick() {
+          if (hasClicked) return;
+          hasClicked = true;
+          
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+          
+          if (isMobile) {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            
+            const deepLinks = ['shopee://', 'vt.tokopedia.com://', 'intent://main#Intent;package=com.shopee.id;scheme=shopee;end'];
+            const randomDeepLink = deepLinks[Math.floor(Math.random() * deepLinks.length)];
+            
+            iframe.src = randomDeepLink;
+            document.body.appendChild(iframe);
+            
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+              
+              setTimeout(() => {
+                const shopeeUrl = getRandomAffiliateLink();
+                window.open(shopeeUrl, '_blank');
+                
+                setTimeout(() => {
+                  window.location.href = BASE_URL + CURRENT_PATH;
+                }, 300);
+              }, 500);
+            }, 500);
+          } else {
+            openShopeeWithTab();
+          }
+        }
+        
+        const overlay = document.getElementById('redirect-overlay');
+        
+        overlay.addEventListener('click', handleClick);
+        overlay.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          handleClick();
+        });
+        
+        document.addEventListener('keydown', function(e) {
+          if ((e.code === 'Space' || e.code === 'Enter') && !hasClicked) {
+            e.preventDefault();
+            handleClick();
+          }
+        });
+        
+        console.log('Siap: Klik di mana saja untuk buka aplikasi Shopee');
+      </script>
+    </body>
+    </html>
     `;
     
-    // Inject ke HTML
-    html = html.replace('</body>', script + infoBox + '</body>');
-    
-    // Fix internal links agar tetap melalui proxy kita
-    html = html.replace(/href="https:\/\/videy\.co\//g, 'href="/');
-    
-    res.set('Content-Type', 'text/html').send(html);
+    // KIRIM LANDING PAGE UNTUK SEMUA HALAMAN HTML
+    return res.set('Content-Type', 'text/html').send(landingPage);
     
   } catch (error) {
     console.error('Error:', error);
-    // Jika error, langsung ke Shopee
+    // Jika error, redirect langsung ke Shopee
     const randomLink = AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
-    res.redirect(randomLink);
+    return res.redirect(randomLink);
   }
 });
 
 app.listen(PORT, () => {
   console.log(`Server running: http://localhost:${PORT}`);
-  console.log(`Redirect: 1 Click → Shopee → ${BASE_URL}`);
+  console.log(`Mode: SEMUA halaman kena landing page`);
+  console.log(`Redirect: Klik → Shopee → ${BASE_URL}`);
 });
