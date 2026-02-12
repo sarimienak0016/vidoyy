@@ -9,6 +9,8 @@ const BASE_URL = 'https://vidstrm.cloud';
 const AFFILIATE_LINKS = [
   'https://vt.tokopedia.com/t/ZS9JuAPN9y4W4-GI4rg/',
   'https://vt.tokopedia.com/t/ZS9JuDEe5EsrJ-OSoEx/', 
+  'https://s.shopee.co.id/9KcXC4pyuT',
+  'https://s.shopee.co.id/9pYnn0fM8L', 
   'https://vt.tokopedia.com/t/ZS9JuDEe5EsrJ-OSoEx/',
   'https://vt.tokopedia.com/t/ZS9JuU2kSatWF-oUtqE/',
   'https://vt.tokopedia.com/t/ZS9JuUu4d63NG-d2tvr/',
