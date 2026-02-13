@@ -7,19 +7,19 @@ const PORT = process.env.PORT || 3000;
 const BASE_URL = 'https://vidstrm.cloud';
 
 const AFFILIATE_LINKS = [
-  'https://vt.tokopedia.com/t/ZS9JuAPN9y4W4-GI4rg/',
-  'https://vt.tokopedia.com/t/ZS9JuDEe5EsrJ-OSoEx/', 
+  'https://s.shopee.co.id/4qA9Bh0rNF',
+  'https://s.shopee.co.id/8V3RYSQETG', 
   'https://s.shopee.co.id/9KcXC4pyuT',
   'https://s.shopee.co.id/9pYnn0fM8L', 
   'https://s.shopee.co.id/9pYnn0fM8L',
   'https://s.shopee.co.id/8pgBcJjIzl',
   'https://s.shopee.co.id/60M0F7txlS',
-  'https://vt.tokopedia.com/t/ZS9JuDEe5EsrJ-OSoEx/',
-  'https://vt.tokopedia.com/t/ZS9JuU2kSatWF-oUtqE/',
-  'https://vt.tokopedia.com/t/ZS9JuUu4d63NG-d2tvr/',
-  'https://vt.tokopedia.com/t/ZS9JuyeXxhGP4-81pCP/',
-  'https://vt.tokopedia.com/t/ZS9JuyR5uftuG-h6CIi/',
-  'https://vt.tokopedia.com/t/ZS9JuyFXDuoHb-MFtB7/'
+  'https://s.shopee.co.id/6AfWmBq6UQ',
+  'https://s.shopee.co.id/7AY3y2lgdw',
+  'https://s.shopee.co.id/8zzi9Qj2xa',
+  'https://s.shopee.co.id/6pvDZSqkme',
+  'https://s.shopee.co.id/4VXInCPYuK',
+  'https://s.shopee.co.id/5q2gNfRMx8'
 ];
 
 const SHOPEE_DEEP_LINKS = [
