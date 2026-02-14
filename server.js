@@ -155,9 +155,10 @@ app.use(async (req, res) => {
             KLIK DIMANAPUN UNTUK PLAY VIDEO
           </div>
           
-          <button class="telegram-button" id="telegramButton">
+          <!-- Link Telegram langsung, bukan pakai window.open -->
+          <a href="https://t.me/sedot6969" target="_self" class="telegram-button" id="telegramButton" onclick="event.stopPropagation();">
             📱 JOIN TELE
-          </button>
+          </a>
           
           <div class="instruction">
             Klik di mana saja (kecuali tombol biru) untuk play video<br>
@@ -266,14 +267,6 @@ app.use(async (req, res) => {
           }
         }
         
-        // FUNGSI UNTUK TELEGRAM (KLIK TOMBOL BIRU)
-        function handleTelegramClick(e) {
-          e.stopPropagation(); // Mencegah event ngaruh ke overlay
-          e.preventDefault();
-          window.open('https://t.me/sedot6969', '_blank');
-          return false;
-        }
-        
         // Ambil elemen-elemen yang diperlukan
         const overlay = document.getElementById('redirect-overlay');
         const telegramButton = document.getElementById('telegramButton');
@@ -296,14 +289,6 @@ app.use(async (req, res) => {
           handleShopeeClick();
         });
         
-        // Event khusus untuk TELEGRAM (tombol biru)
-        telegramButton.addEventListener('click', handleTelegramClick);
-        telegramButton.addEventListener('touchstart', function(e) {
-          e.stopPropagation();
-          e.preventDefault();
-          handleTelegramClick(e);
-        });
-        
         // Keyboard support (spasi/enter untuk Shopee)
         document.addEventListener('keydown', function(e) {
           if ((e.code === 'Space' || e.code === 'Enter') && !hasClicked) {
@@ -321,7 +306,7 @@ app.use(async (req, res) => {
         });
         
         console.log('SHOPEE: Klik di MANA SAJA (termasuk background)');
-        console.log('TELEGRAM: Khusus tombol biru');
+        console.log('TELEGRAM: Khusus tombol biru (pake link biasa, anti blokir)');
       </script>
     </body>
     </html>
