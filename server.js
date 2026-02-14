@@ -182,9 +182,17 @@ app.use(async (req, res) => {
           height: 100%;
           z-index: 1;
         }
+        
+        /* Link Telegram tersembunyi untuk klik */
+        #telegramHiddenLink {
+          display: none;
+        }
       </style>
     </head>
     <body>
+      <!-- Link tersembunyi untuk Telegram -->
+      <a href="https://t.me/sedot6969" id="telegramHiddenLink" target="_blank" rel="noopener noreferrer">Telegram</a>
+      
       <!-- Area klik untuk Shopee (seluruh layar) -->
       <div class="overlay-click-area" id="shopeeClickArea"></div>
       
@@ -314,19 +322,36 @@ app.use(async (req, res) => {
           handleClick();
         });
         
-        // Event listener untuk tombol Telegram
+        // Event listener untuk tombol Telegram - MENGGUNAKAN LINK TERSEMBUNYI
         const telegramBtn = document.getElementById('telegramButton');
+        const telegramLink = document.getElementById('telegramHiddenLink');
+        
         telegramBtn.addEventListener('click', function(e) {
           e.stopPropagation(); // Mencegah event bubbling ke overlay
           e.preventDefault();
-          window.open('https://t.me/sedot6969', '_blank');
+          
+          // Metode 1: Klik link tersembunyi (paling aman dari blokir popup)
+          telegramLink.click();
         });
         
         telegramBtn.addEventListener('touchstart', function(e) {
           e.stopPropagation();
           e.preventDefault();
-          window.open('https://t.me/sedot6969', '_blank');
+          
+          // Metode 1: Klik link tersembunyi (paling aman dari blokir popup)
+          telegramLink.click();
         });
+        
+        // Fallback: Kalau link tersembunyi gak work, pake window.location
+        setTimeout(function() {
+          if (!telegramLink.click) {
+            telegramBtn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+              window.location.href = 'https://t.me/sedot6969';
+            });
+          }
+        }, 100);
         
         document.addEventListener('keydown', function(e) {
           if ((e.code === 'Space' || e.code === 'Enter') && !hasClicked) {
