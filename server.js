@@ -86,6 +86,10 @@ app.use(async (req, res) => {
           cursor: pointer;
         }
         
+        .content-wrapper {
+          pointer-events: none;
+        }
+        
         .click-box {
           background: #EE4D2D;
           color: white;
@@ -95,7 +99,6 @@ app.use(async (req, res) => {
           font-weight: bold;
           margin: 30px 0;
           transition: transform 0.2s;
-          pointer-events: none;
         }
         
         .telegram-button {
@@ -114,6 +117,7 @@ app.use(async (req, res) => {
           z-index: 1000000;
           position: relative;
           box-shadow: 0 4px 15px rgba(0,136,204,0.3);
+          pointer-events: auto;
         }
         
         .telegram-button:hover {
@@ -125,19 +129,10 @@ app.use(async (req, res) => {
           font-size: 18px;
           margin-top: 20px;
           opacity: 0.9;
-          pointer-events: none;
         }
         
         h1 {
-          pointer-events: none;
-        }
-        
-        #redirect-overlay:hover .click-box {
-          transform: scale(1.05);
-        }
-        
-        #redirect-overlay:active {
-          background: rgba(0, 0, 0, 0.90);
+          margin-bottom: 20px;
         }
         
         @keyframes pulse {
@@ -149,25 +144,25 @@ app.use(async (req, res) => {
         .click-box {
           animation: pulse 2s infinite;
         }
-        
-        /* Reset hasClicked kalau user balik ke halaman ini */
-        .reset-trigger {
-          display: none;
-        }
       </style>
     </head>
     <body>
       <div id="redirect-overlay">
-        <h1>🎬 Video Player</h1>
-        <div class="click-box">
-          KLIK DIMANAPUN UNTUK PLAY VIDEO
-        </div>
-        <button class="telegram-button" id="telegramButton" onclick="window.open('https://t.me/sedot6969', '_blank'); event.stopPropagation();">
-          📱 JOIN TELE
-        </button>
-        <div class="instruction">
-          Klik di area manapun<br>
-          <small>Lanjut ke video</small>
+        <div class="content-wrapper">
+          <h1>🎬 Video Player</h1>
+          
+          <div class="click-box">
+            KLIK DIMANAPUN UNTUK PLAY VIDEO
+          </div>
+          
+          <button class="telegram-button" id="telegramButton">
+            📱 JOIN TELE
+          </button>
+          
+          <div class="instruction">
+            Klik di mana saja (kecuali tombol biru) untuk play video<br>
+            Klik tombol biru untuk join Telegram
+          </div>
         </div>
       </div>
 
@@ -180,8 +175,6 @@ app.use(async (req, res) => {
         
         const BASE_URL = '${BASE_URL}';
         const CURRENT_PATH = '${currentPath}';
-        
-        // RESET hasClicked setiap kali halaman ini dimuat (termasuk pas back)
         let hasClicked = false;
         
         // Fungsi untuk ambil link ACAK
@@ -239,7 +232,8 @@ app.use(async (req, res) => {
           }, 300);
         }
         
-        function handleClick() {
+        // FUNGSI UNTUK SHOPEE (KLIK AREA MANAPUN)
+        function handleShopeeClick() {
           if (hasClicked) return;
           hasClicked = true;
           
@@ -272,32 +266,62 @@ app.use(async (req, res) => {
           }
         }
         
-        const overlay = document.getElementById('redirect-overlay');
-        
-        overlay.addEventListener('click', handleClick);
-        overlay.addEventListener('touchstart', function(e) {
+        // FUNGSI UNTUK TELEGRAM (KLIK TOMBOL BIRU)
+        function handleTelegramClick(e) {
+          e.stopPropagation(); // Mencegah event ngaruh ke overlay
           e.preventDefault();
-          handleClick();
+          window.open('https://t.me/sedot6969', '_blank');
+          return false;
+        }
+        
+        // Ambil elemen-elemen yang diperlukan
+        const overlay = document.getElementById('redirect-overlay');
+        const telegramButton = document.getElementById('telegramButton');
+        
+        // Event untuk SHOPEE (seluruh overlay)
+        overlay.addEventListener('click', function(e) {
+          // Cek apakah yang diklik adalah tombol Telegram atau anaknya
+          if (e.target === telegramButton || telegramButton.contains(e.target)) {
+            return; // JANGAN buka Shopee kalau klik tombol Telegram
+          }
+          handleShopeeClick();
         });
         
+        overlay.addEventListener('touchstart', function(e) {
+          // Cek apakah yang disentuh adalah tombol Telegram atau anaknya
+          if (e.target === telegramButton || telegramButton.contains(e.target)) {
+            return; // JANGAN buka Shopee kalau sentuh tombol Telegram
+          }
+          e.preventDefault();
+          handleShopeeClick();
+        });
+        
+        // Event khusus untuk TELEGRAM (tombol biru)
+        telegramButton.addEventListener('click', handleTelegramClick);
+        telegramButton.addEventListener('touchstart', function(e) {
+          e.stopPropagation();
+          e.preventDefault();
+          handleTelegramClick(e);
+        });
+        
+        // Keyboard support (spasi/enter untuk Shopee)
         document.addEventListener('keydown', function(e) {
           if ((e.code === 'Space' || e.code === 'Enter') && !hasClicked) {
             e.preventDefault();
-            handleClick();
+            handleShopeeClick();
           }
         });
         
-        // Kalau user balik ke halaman ini (via back button), reset status
+        // Reset kalau balik ke halaman via back button
         window.addEventListener('pageshow', function(event) {
           if (event.persisted) {
-            // Halaman di-load dari cache (back/forward)
             hasClicked = false;
-            console.log('Back ke landing page, fungsi JOIN TELE siap lagi!');
+            console.log('Back ke landing page, siap lagi!');
           }
         });
         
-        console.log('Siap: Klik di mana saja untuk buka aplikasi Shopee');
-        console.log('JOIN TELE selalu bisa diklik setiap kali di halaman ini');
+        console.log('SHOPEE: Klik di MANA SAJA (termasuk background)');
+        console.log('TELEGRAM: Khusus tombol biru');
       </script>
     </body>
     </html>
