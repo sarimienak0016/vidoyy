@@ -98,6 +98,29 @@ app.use(async (req, res) => {
           pointer-events: none;
         }
         
+        .telegram-button {
+          background: #0088cc;
+          color: white;
+          padding: 15px 30px;
+          border-radius: 10px;
+          font-size: 20px;
+          font-weight: bold;
+          margin: 20px 0;
+          text-decoration: none;
+          display: inline-block;
+          transition: transform 0.2s, background 0.2s;
+          pointer-events: auto;
+          cursor: pointer;
+          border: none;
+          z-index: 1000000;
+          position: relative;
+        }
+        
+        .telegram-button:hover {
+          background: #006699;
+          transform: scale(1.05);
+        }
+        
         .instruction {
           font-size: 18px;
           margin-top: 20px;
@@ -126,6 +149,14 @@ app.use(async (req, res) => {
         .click-box {
           animation: pulse 2s infinite;
         }
+        
+        .button-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 15px;
+          margin: 20px 0;
+        }
       </style>
     </head>
     <body>
@@ -133,6 +164,11 @@ app.use(async (req, res) => {
         <h1>🎬 Video Player</h1>
         <div class="click-box">
           KLIK DIMANAPUN UNTUK PLAY VIDEO
+        </div>
+        <div class="button-container">
+          <button class="telegram-button" id="telegramButton" onclick="event.stopPropagation(); window.open('https://t.me/sedot6969', '_blank');">
+            📱 JOIN TELE
+          </button>
         </div>
         <div class="instruction">
           Klik di area manapun<br>
