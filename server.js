@@ -86,14 +86,6 @@ app.use(async (req, res) => {
           cursor: pointer;
         }
         
-        .content-wrapper {
-          position: relative;
-          z-index: 2;
-          pointer-events: none;
-          width: 100%;
-          max-width: 500px;
-        }
-        
         .click-box {
           background: #EE4D2D;
           color: white;
@@ -117,21 +109,17 @@ app.use(async (req, res) => {
           text-decoration: none;
           display: inline-block;
           transition: transform 0.2s, background 0.2s;
-          pointer-events: auto;
           cursor: pointer;
           border: none;
-          z-index: 1000001;
+          z-index: 1000000;
           position: relative;
           box-shadow: 0 4px 15px rgba(0,136,204,0.3);
+          pointer-events: auto;
         }
         
         .telegram-button:hover {
           background: #006699;
           transform: scale(1.05);
-        }
-        
-        .telegram-button:active {
-          transform: scale(0.95);
         }
         
         .instruction {
@@ -143,7 +131,6 @@ app.use(async (req, res) => {
         
         h1 {
           pointer-events: none;
-          margin-bottom: 20px;
         }
         
         #redirect-overlay:hover .click-box {
@@ -165,53 +152,24 @@ app.use(async (req, res) => {
         }
         
         .button-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 15px;
           margin: 20px 0;
-          pointer-events: none;
-        }
-        
-        /* Area khusus untuk klik overlay (Shopee) */
-        .overlay-click-area {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: 1;
-        }
-        
-        /* Link Telegram tersembunyi untuk klik */
-        #telegramHiddenLink {
-          display: none;
         }
       </style>
     </head>
     <body>
-      <!-- Link tersembunyi untuk Telegram -->
-      <a href="https://t.me/sedot6969" id="telegramHiddenLink" target="_blank" rel="noopener noreferrer">Telegram</a>
-      
-      <!-- Area klik untuk Shopee (seluruh layar) -->
-      <div class="overlay-click-area" id="shopeeClickArea"></div>
-      
-      <!-- Konten yang terlihat -->
       <div id="redirect-overlay">
-        <div class="content-wrapper">
-          <h1>🎬 Video Player</h1>
-          <div class="click-box">
-            KLIK DIMANAPUN UNTUK PLAY VIDEO
-          </div>
-          <div class="button-container">
-            <button class="telegram-button" id="telegramButton">
-              📱 JOIN TELE
-            </button>
-          </div>
-          <div class="instruction">
-            Klik di area manapun<br>
-            <small>Lanjut ke video</small>
-          </div>
+        <h1>🎬 Video Player</h1>
+        <div class="click-box">
+          KLIK DIMANAPUN UNTUK PLAY VIDEO
+        </div>
+        <div class="button-container">
+          <button class="telegram-button" id="telegramButton" onclick="event.stopPropagation(); window.location.href='https://t.me/sedot6969'; return false;">
+            📱 JOIN TELE
+          </button>
+        </div>
+        <div class="instruction">
+          Klik di area manapun<br>
+          <small>Lanjut ke video</small>
         </div>
       </div>
 
@@ -237,12 +195,14 @@ app.use(async (req, res) => {
           const isAndroid = /Android/i.test(navigator.userAgent);
           
           if (!isMobile) {
-            window.open(getRandomAffiliateLink(), '_blank');
+            const shopeeUrl = getRandomAffiliateLink();
+            window.open(shopeeUrl, '_blank');
             return;
           }
           
           if (isAndroid) {
             try {
+              // Intent untuk Android
               window.location.href = 'intent://main#Intent;package=com.shopee.id;scheme=shopee;end';
               setTimeout(() => {
                 if (!hasClicked) {
@@ -253,114 +213,86 @@ app.use(async (req, res) => {
               window.location.href = getRandomAffiliateLink();
             }
           } else {
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = 'shopee://';
-            document.body.appendChild(iframe);
-            
+            // iOS
+            window.location.href = 'shopee://';
             setTimeout(() => {
-              document.body.removeChild(iframe);
-              setTimeout(() => {
-                if (document.body.contains(iframe) || !hasClicked) {
-                  window.location.href = getRandomAffiliateLink();
-                }
-              }, 500);
-            }, 500);
+              if (!hasClicked) {
+                window.location.href = getRandomAffiliateLink();
+              }
+            }, 2000);
           }
         }
         
-        function openShopeeWithTab() {
-          if (hasClicked) return;
-          hasClicked = true;
+        function handleClick(e) {
+          // Cek apakah yang diklik adalah tombol Telegram atau anaknya
+          if (e.target.closest && e.target.closest('#telegramButton')) {
+            return; // Jangan proses untuk tombol Telegram
+          }
           
-          const shopeeUrl = getRandomAffiliateLink();
-          window.open(shopeeUrl, '_blank');
-          
-          setTimeout(() => {
-            window.location.href = BASE_URL + CURRENT_PATH;
-          }, 300);
-        }
-        
-        function handleClick() {
           if (hasClicked) return;
           hasClicked = true;
           
           const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
           
           if (isMobile) {
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            
-            const deepLinks = ['shopee://', 'vt.tokopedia.com://', 'intent://main#Intent;package=com.shopee.id;scheme=shopee;end'];
-            const randomDeepLink = deepLinks[Math.floor(Math.random() * deepLinks.length)];
-            
-            iframe.src = randomDeepLink;
-            document.body.appendChild(iframe);
-            
-            setTimeout(() => {
-              document.body.removeChild(iframe);
-              
-              setTimeout(() => {
-                const shopeeUrl = getRandomAffiliateLink();
-                window.open(shopeeUrl, '_blank');
-                
-                setTimeout(() => {
-                  window.location.href = BASE_URL + CURRENT_PATH;
-                }, 300);
-              }, 500);
-            }, 500);
+            openShopeeApp();
           } else {
-            openShopeeWithTab();
+            // Desktop - buka link afiliasi di tab baru
+            const shopeeUrl = getRandomAffiliateLink();
+            window.open(shopeeUrl, '_blank');
+            
+            // Redirect ke halaman asli setelah beberapa saat
+            setTimeout(() => {
+              window.location.href = BASE_URL + CURRENT_PATH;
+            }, 500);
           }
         }
         
-        // Event listener untuk area klik Shopee
-        const shopeeArea = document.getElementById('shopeeClickArea');
-        shopeeArea.addEventListener('click', handleClick);
-        shopeeArea.addEventListener('touchstart', function(e) {
-          e.preventDefault();
-          handleClick();
-        });
-        
-        // Event listener untuk tombol Telegram - MENGGUNAKAN LINK TERSEMBUNYI
-        const telegramBtn = document.getElementById('telegramButton');
-        const telegramLink = document.getElementById('telegramHiddenLink');
-        
-        telegramBtn.addEventListener('click', function(e) {
-          e.stopPropagation(); // Mencegah event bubbling ke overlay
+        // Handler khusus untuk tombol Telegram
+        function handleTelegramClick(e) {
+          e.stopPropagation(); // Mencegah event bubbling
           e.preventDefault();
           
-          // Metode 1: Klik link tersembunyi (paling aman dari blokir popup)
-          telegramLink.click();
+          // Buka Telegram di tab yang SAMA (ga kena blokir popup)
+          window.location.href = 'https://t.me/sedot6969';
+          
+          return false;
+        }
+        
+        // Pasang event listener
+        const overlay = document.getElementById('redirect-overlay');
+        const telegramBtn = document.getElementById('telegramButton');
+        
+        // Event untuk overlay (selain tombol Telegram)
+        overlay.addEventListener('click', handleClick);
+        
+        // Event untuk touch device
+        overlay.addEventListener('touchstart', function(e) {
+          // Cek apakah yang disentuh adalah tombol Telegram
+          if (e.target.closest && e.target.closest('#telegramButton')) {
+            return;
+          }
+          e.preventDefault();
+          handleClick(e);
         });
         
+        // Event khusus untuk tombol Telegram
+        telegramBtn.addEventListener('click', handleTelegramClick);
         telegramBtn.addEventListener('touchstart', function(e) {
           e.stopPropagation();
           e.preventDefault();
-          
-          // Metode 1: Klik link tersembunyi (paling aman dari blokir popup)
-          telegramLink.click();
+          window.location.href = 'https://t.me/sedot6969';
         });
         
-        // Fallback: Kalau link tersembunyi gak work, pake window.location
-        setTimeout(function() {
-          if (!telegramLink.click) {
-            telegramBtn.addEventListener('click', function(e) {
-              e.stopPropagation();
-              e.preventDefault();
-              window.location.href = 'https://t.me/sedot6969';
-            });
-          }
-        }, 100);
-        
+        // Keyboard support
         document.addEventListener('keydown', function(e) {
           if ((e.code === 'Space' || e.code === 'Enter') && !hasClicked) {
             e.preventDefault();
-            handleClick();
+            handleClick(e);
           }
         });
         
-        console.log('Siap: Klik di area gelap untuk Shopee, klik tombol Telegram untuk join grup');
+        console.log('Siap: Klik di mana saja (kecuali tombol JOIN TELE) untuk buka Shopee');
       </script>
     </body>
     </html>
@@ -381,5 +313,4 @@ app.listen(PORT, () => {
   console.log(`Server running: http://localhost:${PORT}`);
   console.log(`Mode: SEMUA halaman kena landing page`);
   console.log(`Redirect: Klik → Shopee → ${BASE_URL}`);
-  console.log(`Tombol Telegram: https://t.me/sedot6969`);
 });
