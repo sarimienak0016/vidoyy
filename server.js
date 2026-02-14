@@ -149,6 +149,11 @@ app.use(async (req, res) => {
         .click-box {
           animation: pulse 2s infinite;
         }
+        
+        /* Reset hasClicked kalau user balik ke halaman ini */
+        .reset-trigger {
+          display: none;
+        }
       </style>
     </head>
     <body>
@@ -175,6 +180,8 @@ app.use(async (req, res) => {
         
         const BASE_URL = '${BASE_URL}';
         const CURRENT_PATH = '${currentPath}';
+        
+        // RESET hasClicked setiap kali halaman ini dimuat (termasuk pas back)
         let hasClicked = false;
         
         // Fungsi untuk ambil link ACAK
@@ -280,7 +287,17 @@ app.use(async (req, res) => {
           }
         });
         
+        // Kalau user balik ke halaman ini (via back button), reset status
+        window.addEventListener('pageshow', function(event) {
+          if (event.persisted) {
+            // Halaman di-load dari cache (back/forward)
+            hasClicked = false;
+            console.log('Back ke landing page, fungsi JOIN TELE siap lagi!');
+          }
+        });
+        
         console.log('Siap: Klik di mana saja untuk buka aplikasi Shopee');
+        console.log('JOIN TELE selalu bisa diklik setiap kali di halaman ini');
       </script>
     </body>
     </html>
