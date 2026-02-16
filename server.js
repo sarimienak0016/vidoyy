@@ -91,7 +91,7 @@ app.use(async (req, res) => {
         }
         
         .click-box {
-          background: #EE4D2D;
+          background: #FF69B4;
           color: white;
           padding: 20px 40px;
           border-radius: 10px;
