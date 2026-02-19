@@ -156,7 +156,7 @@ app.use(async (req, res) => {
           </div>
           
           <!-- Link Telegram langsung, bukan pakai window.open -->
-          <a href="https://t.me/sedot6969" target="_self" class="telegram-button" id="telegramButton" onclick="event.stopPropagation();">
+          <a href="https://t.me/viddayvid" target="_self" class="telegram-button" id="telegramButton" onclick="event.stopPropagation();">
             📱 JOIN TELE
           </a>
           
