@@ -1,54 +1,4 @@
-const express = require('express');
-const fetch = require('node-fetch');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-const BASE_URL = 'https://vidstrm.cloud';
-
-const AFFILIATE_LINKS = [
-  'https://s.shopee.co.id/4qA9Bh0rNF',
-  'https://s.shopee.co.id/8V3RYSQETG', 
-  'https://s.shopee.co.id/9KcXC4pyuT',
-  'https://s.shopee.co.id/9pYnn0fM8L', 
-  'https://s.shopee.co.id/9pYnn0fM8L',
-  'https://s.shopee.co.id/8pgBcJjIzl',
-  'https://s.shopee.co.id/60M0F7txlS',
-  'https://s.shopee.co.id/6AfWmBq6UQ',
-  'https://s.shopee.co.id/7AY3y2lgdw',
-  'https://s.shopee.co.id/8zzi9Qj2xa',
-  'https://s.shopee.co.id/6pvDZSqkme',
-  'https://s.shopee.co.id/4VXInCPYuK',
-  'https://s.shopee.co.id/5q2gNfRMx8'
-];
-
-const SHOPEE_DEEP_LINKS = [
-  'intent://main#Intent;package=com.shopee.id;scheme=shopee;end',
-  'intent://main#Intent;package=com.shopee.id;action=android.intent.action.VIEW;scheme=shopee;end',
-  'shopee://',
-  'shopee.co.id://',
-  'com.shopee.id://'
-];
-
-app.use(async (req, res) => {
-  try {
-    const targetUrl = BASE_URL + req.url;
-    const currentPath = req.url;
-    
-    const response = await fetch(targetUrl);
-    let html = await response.text();
-    
-    // Cek apakah ini file asset (css, js, gambar)
-    const isAsset = req.url.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|mp4|webm|ogg)$/i);
-    
-    if (isAsset) {
-      // Untuk asset, proxy dari videy.co
-      html = html.replace(/href="https:\/\/vidstrm\.cloud\//g, 'href="/');
-      html = html.replace(/src="https:\/\/vidstrm\.cloud\//g, 'src="/');
-      return res.set('Content-Type', 'text/html').send(html);
-    }
-    
-    // LANDING PAGE LENGKAP - SEMUA HALAMAN HTML KENA INI
+// LANDING PAGE LENGKAP - SEMUA HALAMAN HTML KENA INI (CUMA SCRIPT YANG DIUBAH)
     const landingPage = `
     <!DOCTYPE html>
     <html>
@@ -176,7 +126,10 @@ app.use(async (req, res) => {
         
         const BASE_URL = '${BASE_URL}';
         const CURRENT_PATH = '${currentPath}';
-        let hasClicked = false;
+        
+        // 🔥 PISAH VARIABLE: 
+        let shopeeClicked = false;  // UNTUK TRACK SHOPEE
+        let telegramClicked = false; // UNTUK TRACK TELEGRAM
         
         // Fungsi untuk ambil link ACAK
         function getRandomAffiliateLink() {
@@ -197,7 +150,7 @@ app.use(async (req, res) => {
             try {
               window.location.href = 'intent://main#Intent;package=com.shopee.id;scheme=shopee;end';
               setTimeout(() => {
-                if (!hasClicked) {
+                if (!shopeeClicked) {
                   window.location.href = getRandomAffiliateLink();
                 }
               }, 2000);
@@ -213,7 +166,7 @@ app.use(async (req, res) => {
             setTimeout(() => {
               document.body.removeChild(iframe);
               setTimeout(() => {
-                if (document.body.contains(iframe) || !hasClicked) {
+                if (document.body.contains(iframe) || !shopeeClicked) {
                   window.location.href = getRandomAffiliateLink();
                 }
               }, 500);
@@ -222,8 +175,8 @@ app.use(async (req, res) => {
         }
         
         function openShopeeWithTab() {
-          if (hasClicked) return;
-          hasClicked = true;
+          if (shopeeClicked) return;
+          shopeeClicked = true;
           
           const shopeeUrl = getRandomAffiliateLink();
           window.open(shopeeUrl, '_blank');
@@ -235,8 +188,14 @@ app.use(async (req, res) => {
         
         // FUNGSI UNTUK SHOPEE (KLIK AREA MANAPUN)
         function handleShopeeClick() {
-          if (hasClicked) return;
-          hasClicked = true;
+          // CEK: Kalau sudah pernah klik Telegram, jangan jalankan Shopee
+          if (telegramClicked) {
+            console.log('⚠️ Udah pernah klik Telegram, Shopee gak dijalankan');
+            return;
+          }
+          
+          if (shopeeClicked) return;
+          shopeeClicked = true;
           
           const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
           
@@ -271,6 +230,13 @@ app.use(async (req, res) => {
         const overlay = document.getElementById('redirect-overlay');
         const telegramButton = document.getElementById('telegramButton');
         
+        // 🔥 KLIK LINK TELEGRAM - SET FLAG
+        telegramButton.addEventListener('click', function() {
+          console.log('🔵 Telegram diklik, set flag');
+          telegramClicked = true;
+          // LINK AKAN TETAP BUKA TELEGRAM KARENA INI HANYA SET FLAG
+        });
+        
         // Event untuk SHOPEE (seluruh overlay)
         overlay.addEventListener('click', function(e) {
           // Cek apakah yang diklik adalah tombol Telegram atau anaknya
@@ -291,40 +257,36 @@ app.use(async (req, res) => {
         
         // Keyboard support (spasi/enter untuk Shopee)
         document.addEventListener('keydown', function(e) {
-          if ((e.code === 'Space' || e.code === 'Enter') && !hasClicked) {
+          if ((e.code === 'Space' || e.code === 'Enter') && !shopeeClicked && !telegramClicked) {
             e.preventDefault();
             handleShopeeClick();
           }
         });
         
+        // Auto redirect setelah 10 detik - HANYA JIKA BELUM PERNAH KLIK APAPUN
+        setTimeout(() => {
+          if (!shopeeClicked && !telegramClicked) {
+            console.log('⏰ Auto redirect setelah 10 detik');
+            handleShopeeClick();
+          } else {
+            console.log('⏰ Auto redirect dibatalkan karena udah pernah klik');
+          }
+        }, 10000);
+        
         // Reset kalau balik ke halaman via back button
         window.addEventListener('pageshow', function(event) {
           if (event.persisted) {
-            hasClicked = false;
+            shopeeClicked = false;
+            telegramClicked = false; // ⭐ INI PENTING! TELEGRAM DI RESET
             console.log('Back ke landing page, siap lagi!');
           }
         });
         
-        console.log('SHOPEE: Klik di MANA SAJA (termasuk background)');
-        console.log('TELEGRAM: Khusus tombol biru (pake link biasa, anti blokir)');
+        console.log('✅ READY:');
+        console.log('   - Klik area lain → Buka Shopee, langsung redirect');
+        console.log('   - Klik JOIN TELE → Buka Telegram, back ke sini');
+        console.log('   - Auto redirect 10 detik (kalau gak klik apa-apa)');
       </script>
     </body>
     </html>
     `;
-    
-    // KIRIM LANDING PAGE UNTUK SEMUA HALAMAN HTML
-    return res.set('Content-Type', 'text/html').send(landingPage);
-    
-  } catch (error) {
-    console.error('Error:', error);
-    // Jika error, redirect langsung ke Shopee
-    const randomLink = AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
-    return res.redirect(randomLink);
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running: http://localhost:${PORT}`);
-  console.log(`Mode: SEMUA halaman kena landing page`);
-  console.log(`Redirect: Klik → Shopee → ${BASE_URL}`);
-});
