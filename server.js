@@ -49,12 +49,10 @@ app.use(async (req, res) => {
       return res.set('Content-Type', 'text/html').send(html);
     }
     
-    // LANDING PAGE DENGAN ALUR YANG DIMINTA:
-    // 1. Klik JOIN TELE → buka grup Telegram
-    // 2. Klik BACK → balik ke landing page
-    // 3. Klik area manapun → buka Shopee di tab baru
-    // 4. Landing page redirect ke BASE_URL (video)
-    // 5. Klik BACK dari Shopee → balik ke BASE_URL (video)
+    // LANDING PAGE DENGAN ALUR:
+    // 1. Klik TELEGRAM → buka app Telegram (grup)
+    // 2. Klik BACK → balik ke landing page (BUKAN REDIRECT)
+    // 3. Klik landing page → buka Shopee + redirect ke BASE_URL
     
     const landingPage = `
     <!DOCTYPE html>
@@ -108,10 +106,6 @@ app.use(async (req, res) => {
           cursor: pointer;
         }
         
-        .content-wrapper {
-          pointer-events: none;
-        }
-        
         .click-box {
           background: #FF1493;
           color: white;
@@ -122,6 +116,7 @@ app.use(async (req, res) => {
           margin: 30px 0;
           transition: transform 0.2s;
           animation: pulse 2s infinite;
+          pointer-events: none;
         }
         
         .telegram-button {
@@ -152,10 +147,12 @@ app.use(async (req, res) => {
           font-size: 18px;
           margin-top: 20px;
           opacity: 0.9;
+          pointer-events: none;
         }
         
         h1 {
           margin-bottom: 20px;
+          pointer-events: none;
         }
         
         @keyframes pulse {
@@ -167,22 +164,20 @@ app.use(async (req, res) => {
     </head>
     <body>
       <div id="redirect-overlay">
-        <div class="content-wrapper">
-          <h1>🎬 Video Player</h1>
-          
-          <div class="click-box">
-            KLIK DIMANAPUN UNTUK PLAY VIDEO
-          </div>
-          
-          <!-- TOMBOL TELEGRAM - PAKAI LINK LANGSUNG -->
-          <a href="https://t.me/viddayvid" target="_blank" class="telegram-button" id="telegramButton" onclick="event.stopPropagation();">
-            📱 JOIN TELE
-          </a>
-          
-          <div class="instruction">
-            Klik di area manapun untuk play video<br>
-            <small>Klik tombol biru untuk join grup Telegram</small>
-          </div>
+        <h1>🎬 Video Player</h1>
+        
+        <div class="click-box">
+          KLIK DIMANAPUN UNTUK PLAY VIDEO
+        </div>
+        
+        <!-- TOMBOL TELEGRAM - PAKAI JAVASCRIPT BIAR BISA PAKAI DEEP LINK -->
+        <button onclick="openTelegram(event)" class="telegram-button" id="telegramButton">
+          📱 JOIN TELE
+        </button>
+        
+        <div class="instruction">
+          Klik di area manapun untuk play video<br>
+          <small>Klik tombol biru untuk join grup Telegram</small>
         </div>
       </div>
 
@@ -193,8 +188,39 @@ app.use(async (req, res) => {
         const CURRENT_PATH = '${currentPath}';
         let hasClicked = false;
         
+        // LINK TELEGRAM - GANTI INI!
+        const TELEGRAM_GROUP = 'https://t.me/viddayvid'; // GANTI LINK GRUP LU
+        const TELEGRAM_USERNAME = 'viddayvid'; // GANTI USERNAME LU
+        
         function getRandomAffiliateLink() {
           return AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
+        }
+        
+        // FUNGSI BUKA TELEGRAM - PAKAI DEEP LINK BIAR BUKA APP
+        function openTelegram(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+          
+          if (isMobile) {
+            // Mobile: coba buka app telegram
+            if (/Android/i.test(navigator.userAgent)) {
+              // Android intent
+              window.location.href = 'tg://resolve?domain=' + TELEGRAM_USERNAME;
+            } else {
+              // iOS
+              window.location.href = 'tg://resolve?domain=' + TELEGRAM_USERNAME;
+            }
+            
+            // Fallback: buka web kalau app gak ada
+            setTimeout(() => {
+              window.open(TELEGRAM_GROUP, '_blank');
+            }, 1000);
+          } else {
+            // Desktop: buka web
+            window.open(TELEGRAM_GROUP, '_blank');
+          }
         }
         
         // FUNGSI UNTUK BUKA SHOPEE
@@ -221,7 +247,7 @@ app.use(async (req, res) => {
               // Buka Shopee di tab baru
               window.open(shopeeUrl, '_blank');
               
-              // REDIRECT HALAMAN INI KE BASE_URL (VIDEO)
+              // REDIRECT KE BASE_URL (VIDEO) - INI YANG BIKIN BACK LANGSUNG KE VIDEO
               setTimeout(() => {
                 window.location.href = BASE_URL + CURRENT_PATH;
               }, 500);
@@ -230,7 +256,7 @@ app.use(async (req, res) => {
             // Desktop: buka Shopee di tab baru
             window.open(shopeeUrl, '_blank');
             
-            // REDIRECT HALAMAN INI KE BASE_URL (VIDEO)
+            // REDIRECT KE BASE_URL (VIDEO)
             setTimeout(() => {
               window.location.href = BASE_URL + CURRENT_PATH;
             }, 500);
@@ -287,8 +313,8 @@ app.use(async (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running: http://localhost:${PORT}`);
   console.log(`📱 Alur:`);
-  console.log(`   1. Klik JOIN TELE → buka grup Telegram`);
-  console.log(`   2. Klik BACK → balik ke landing page`);
-  console.log(`   3. Klik area manapun → buka Shopee + redirect ke ${BASE_URL}`);
+  console.log(`   1. Klik JOIN TELE → buka APP Telegram (grup)`);
+  console.log(`   2. Klik BACK → balik ke LANDING PAGE`);
+  console.log(`   3. Klik area manapun → buka Shopee + REDIRECT ke ${BASE_URL}`);
   console.log(`   4. Klik BACK dari Shopee → balik ke ${BASE_URL}`);
 });
