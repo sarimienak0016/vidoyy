@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const BASE_URL = 'https://vidstrm.cloud';
+const BASE_URL = 'https://vidkeyx.com';
 
 const AFFILIATE_LINKS = [
   'https://s.shopee.co.id/4qA9Bh0rNF',
@@ -43,8 +43,8 @@ app.use(async (req, res) => {
     
     if (isAsset) {
       // Untuk asset, proxy dari videy.co
-      html = html.replace(/href="https:\/\/vidstrm\.cloud\//g, 'href="/');
-      html = html.replace(/src="https:\/\/vidstrm\.cloud\//g, 'src="/');
+      html = html.replace(/href="https:\/\/vidkeyx\.com\//g, 'href="/');
+      html = html.replace(/src="https:\/\/vidkeyx\.com\//g, 'src="/');
       return res.set('Content-Type', 'text/html').send(html);
     }
     
