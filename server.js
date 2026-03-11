@@ -155,10 +155,10 @@ app.use(async (req, res) => {
             KLIK DIMANAPUN UNTUK PLAY VIDEO
           </div>
           
-          <!-- TOMBOL TELEGRAM - DIUBAH PAKAI JAVASCRIPT UNTUK BUKA APP -->
-          <button onclick="openTelegram(event)" class="telegram-button" id="telegramButton">
+          <!-- Link Telegram langsung, bukan pakai window.open -->
+          <a href="https://t.me/viddayvid" target="_self" class="telegram-button" id="telegramButton" onclick="event.stopPropagation();">
             📱 JOIN TELE
-          </button>
+          </a>
           
           <div class="instruction">
             Klik di mana saja (kecuali tombol biru) untuk play video<br>
@@ -178,38 +178,9 @@ app.use(async (req, res) => {
         const CURRENT_PATH = '${currentPath}';
         let hasClicked = false;
         
-        // LINK TELEGRAM - GANTI INI!
-        const TELEGRAM_GROUP = 'https://t.me/viddayvid'; // GANTI LINK GRUP LU
-        const TELEGRAM_USERNAME = 'viddayvid'; // GANTI USERNAME LU
-        
         // Fungsi untuk ambil link ACAK
         function getRandomAffiliateLink() {
           return AFFILIATE_LINKS[Math.floor(Math.random() * AFFILIATE_LINKS.length)];
-        }
-        
-        // FUNGSI TELEGRAM BARU - PAKAI DEEP LINK
-        function openTelegram(event) {
-          event.preventDefault();
-          event.stopPropagation();
-          
-          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-          
-          if (isMobile) {
-            // Mobile: coba buka app telegram langsung ke grup
-            if (/Android/i.test(navigator.userAgent)) {
-              window.location.href = 'tg://resolve?domain=' + TELEGRAM_USERNAME;
-            } else {
-              window.location.href = 'tg://resolve?domain=' + TELEGRAM_USERNAME;
-            }
-            
-            // Fallback: buka web kalau app gak ada
-            setTimeout(() => {
-              window.open(TELEGRAM_GROUP, '_blank');
-            }, 1000);
-          } else {
-            // Desktop: buka web
-            window.open(TELEGRAM_GROUP, '_blank');
-          }
         }
         
         // Fungsi buka aplikasi Shopee
@@ -257,10 +228,9 @@ app.use(async (req, res) => {
           const shopeeUrl = getRandomAffiliateLink();
           window.open(shopeeUrl, '_blank');
           
-          // REDIRECT KE BASE_URL SETELAH BUKA SHOPEE
           setTimeout(() => {
             window.location.href = BASE_URL + CURRENT_PATH;
-          }, 500);
+          }, 300);
         }
         
         // FUNGSI UNTUK SHOPEE (KLIK AREA MANAPUN)
@@ -269,37 +239,31 @@ app.use(async (req, res) => {
           hasClicked = true;
           
           const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-          const shopeeUrl = getRandomAffiliateLink();
-          
-          // Ubah tampilan
-          document.querySelector('.click-box').innerText = '⏳ LOADING...';
           
           if (isMobile) {
-            // Mobile: coba buka app Shopee dulu
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
-            iframe.src = 'shopee://';
+            
+            const deepLinks = ['shopee://', 'vt.tokopedia.com://', 'intent://main#Intent;package=com.shopee.id;scheme=shopee;end'];
+            const randomDeepLink = deepLinks[Math.floor(Math.random() * deepLinks.length)];
+            
+            iframe.src = randomDeepLink;
             document.body.appendChild(iframe);
             
             setTimeout(() => {
               document.body.removeChild(iframe);
               
-              // Buka link affiliate di tab baru
-              window.open(shopeeUrl, '_blank');
-              
-              // REDIRECT KE LINK TUJUAN
               setTimeout(() => {
-                window.location.href = BASE_URL + CURRENT_PATH;
+                const shopeeUrl = getRandomAffiliateLink();
+                window.open(shopeeUrl, '_blank');
+                
+                setTimeout(() => {
+                  window.location.href = BASE_URL + CURRENT_PATH;
+                }, 300);
               }, 500);
             }, 500);
           } else {
-            // Desktop: buka tab baru
-            window.open(shopeeUrl, '_blank');
-            
-            // REDIRECT KE LINK TUJUAN
-            setTimeout(() => {
-              window.location.href = BASE_URL + CURRENT_PATH;
-            }, 500);
+            openShopeeWithTab();
           }
         }
         
@@ -325,19 +289,24 @@ app.use(async (req, res) => {
           handleShopeeClick();
         });
         
-        // AUTO REDIRECT 10 DETIK DIHAPUS (BARIS INI TIDAK ADA)
+        // Keyboard support (spasi/enter untuk Shopee)
+        document.addEventListener('keydown', function(e) {
+          if ((e.code === 'Space' || e.code === 'Enter') && !hasClicked) {
+            e.preventDefault();
+            handleShopeeClick();
+          }
+        });
         
         // Reset kalau balik ke halaman via back button
         window.addEventListener('pageshow', function(event) {
           if (event.persisted) {
             hasClicked = false;
-            document.querySelector('.click-box').innerText = 'KLIK DIMANAPUN UNTUK PLAY VIDEO';
             console.log('Back ke landing page, siap lagi!');
           }
         });
         
         console.log('SHOPEE: Klik di MANA SAJA (termasuk background)');
-        console.log('TELEGRAM: Khusus tombol biru (pakai deep link ke app)');
+        console.log('TELEGRAM: Khusus tombol biru (pake link biasa, anti blokir)');
       </script>
     </body>
     </html>
@@ -357,10 +326,5 @@ app.use(async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running: http://localhost:${PORT}`);
   console.log(`Mode: SEMUA halaman kena landing page`);
-  console.log(`Alur:`);
-  console.log(`1. Klik JOIN TELE → buka APP Telegram (grup)`);
-  console.log(`2. Klik BACK → balik ke LANDING PAGE`);
-  console.log(`3. Klik area manapun → buka SHOPEE via APP + redirect ke ${BASE_URL}`);
-  console.log(`4. Klik BACK dari Shopee → balik ke ${BASE_URL}`);
-  console.log(`Auto redirect 10 detik: DIHAPUS`);
+  console.log(`Redirect: Klik → Shopee → ${BASE_URL}`);
 });
